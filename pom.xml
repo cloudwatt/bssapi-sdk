@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.cloudwatt.api</groupId>
+	<artifactId>cloudwatt-pub-api-client</artifactId>
+	<version>0.1.0</version>
+	<packaging>jar</packaging>
+	<name>Cloudwatt Public API</name>
+
+	<properties>
+		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>1.7</maven.compiler.source>
+                <maven-javadoc-plugin.version>2.10.1</maven-javadoc-plugin.version>
+                <maven-dependency-plugin.version>2.9</maven-dependency-plugin.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                <logback-classic.version>1.0.13</logback-classic.version>
+                <httpclient.version>4.3.5</httpclient.version>
+                <commons-codec.version>1.10</commons-codec.version>
+                <junit.version>4.11</junit.version>
+                <guava.version>17.0</guava.version>
+                <jackson.version>2.3.3</jackson.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback-classic.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${httpclient.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>${commons-codec.version}</version>
+		</dependency>
+                <dependency>
+        	        <groupId>com.google.guava</groupId>
+	                <artifactId>guava</artifactId>
+	                <version>${guava.version}</version>
+                </dependency>
+                <dependency>
+	                <groupId>com.fasterxml.jackson.core</groupId>
+	                <artifactId>jackson-databind</artifactId>
+	                <version>${jackson.version}</version>
+                </dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>
