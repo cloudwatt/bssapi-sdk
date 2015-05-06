@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
@@ -11,6 +13,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
+import com.cloudwatt.apis.bss.spec.exceptions.GenericHorseException;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -67,6 +70,57 @@ public class WebClient {
         return client.execute(request);
     }
 
+    private <T> Optional<T> tryReadJson(final Class<T> clazz, final HttpUriRequest request,
+            final CloseableHttpResponse response) throws JsonParseException, IOException {
+        BufferedReader reader = null;
+        JsonFactory factory = getJsonFactory();
+        JsonParser parser = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), Constants.UTF_8));
+        } catch (UnsupportedEncodingException e) {
+
+            throw new RuntimeException(e);
+        }
+
+        parser = factory.createParser(reader);
+        try {
+            ObjectMapper mapper = getObjectMapper(factory);
+            mapper.canSerialize(clazz);
+            parser.setCodec(mapper);
+            try {
+                T webClientResponse = parser.readValueAs(clazz);
+                return Optional.fromNullable(webClientResponse);
+            } catch (JsonParseException err) {
+                StringBuilder sb = new StringBuilder("Cannot parse JSON result ["). //$NON-NLS-1$
+                append(request.getMethod())
+                                                                                  .append(" ") //$NON-NLS-1$
+                                                                                  .append(request.getURI()
+                                                                                                 .toASCIIString())
+                                                                                  .append("][).append(") //$NON-NLS-1$
+                                                                                  .append(response.getStatusLine()
+                                                                                                  .getStatusCode())
+                                                                                  .append("][") //$NON-NLS-1$
+                                                                                  .append(response.getStatusLine()
+                                                                                                  .getReasonPhrase())
+                                                                                  .append("] ") //$NON-NLS-1$
+                                                                                  .append(err.getClass()
+                                                                                             .getSimpleName())
+                                                                                  .append("=") //$NON-NLS-1$
+                                                                                  .append(err.getMessage());
+                final String msg = sb.toString();
+                throw new JsonParseException(msg, err.getLocation());
+            }
+        } finally {
+            parser.close();
+            reader.close();
+        }
+    }
+
+    /**
+     * The ISO date format
+     */
+    public final static String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"; //$NON-NLS-1$
+
     /**
      * Call the API with proper headers and deserialized contents
      * 
@@ -79,7 +133,7 @@ public class WebClient {
      */
     @SuppressWarnings("unchecked")
     public <T> Optional<T> doRequestAndRetrieveResultAsJSON(Class<T> clazz, HttpUriRequest request,
-            Optional<TokenAccess> access) throws IOException, TooManyRequestsException {
+            Optional<TokenAccess> access) throws IOException, TooManyRequestsException, GenericHorseException {
         // final long start = System.currentTimeMillis();
         try {
             request.setHeader(Constants.HEADER_NAME_ACCEPT, Constants.HEADER_VALUE_APPLICATION_JSON);
@@ -88,63 +142,51 @@ public class WebClient {
                 request.setHeader(Constants.HEADER_NAME_X_AUTH_TOKEN, access.get().getToken().getId());
             }
             CloseableHttpResponse response = doRequest(client, request);
-            BufferedReader reader = null;
-            JsonFactory factory = getJsonFactory();
-            JsonParser parser = null;
+
             try {
-                if (response.getStatusLine().getStatusCode() == 404) {
+                final int httpCode = response.getStatusLine().getStatusCode();
+                if (httpCode == 404) {
                     // HTTP 404: Not found
                     return Optional.<T> absent();
-                }
-                if (response.getStatusLine().getStatusCode() == 429) {
-                    // TODO: parse blocked until
-                    throw new TooManyRequestsException(request, Optional.<Date> absent());
+                } else if (httpCode == 429) {
+                    Optional<GenericHorseException.HorseErrorDescription> value = Optional.absent();
+                    try {
+                        value = tryReadJson(GenericHorseException.HorseErrorDescription.class, request, response);
+                    } catch (IOException e) {
+                    }
+                    Optional<Date> blockedUntil = Optional.absent();
+                    if (value.isPresent()) {
+                        try {
+                            Date dx = (new SimpleDateFormat(ISO_DATE_FORMAT)).parse(value.get()
+                                                                                         .getData()
+                                                                                         .get("blockedUntil")); //$NON-NLS-1$
+                            if (dx.after(new Date(System.currentTimeMillis() - 3600000))) {
+                                blockedUntil = Optional.<Date> of(dx);
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println(new ObjectMapper().writer()
+                                                             .withDefaultPrettyPrinter()
+                                                             .writeValueAsString(value.get()));
+                    }
+                    throw new TooManyRequestsException(request, blockedUntil);
+                } else if (httpCode > 399) {
+                    // We try to read Error code !
+                    Optional<GenericHorseException.HorseErrorDescription> value = tryReadJson(GenericHorseException.HorseErrorDescription.class,
+                                                                                              request,
+                                                                                              response);
+                    if (value.isPresent()) {
+                        throw new GenericHorseException(request, value.get());
+                    }
                 }
 
                 if (clazz.isAssignableFrom(StatusLine.class)) {
                     return (Optional<T>) Optional.<StatusLine> of(response.getStatusLine());
                 }
 
-                try {
-                    reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(),
-                                                                      Constants.UTF_8));
-                } catch (UnsupportedEncodingException e) {
+                return tryReadJson(clazz, request, response);
 
-                    throw new RuntimeException(e);
-                }
-
-                parser = factory.createParser(reader);
-                try {
-                    ObjectMapper mapper = getObjectMapper(factory);
-                    mapper.canSerialize(clazz);
-                    parser.setCodec(mapper);
-                    try {
-                        T webClientResponse = parser.readValueAs(clazz);
-                        return Optional.fromNullable(webClientResponse);
-                    } catch (JsonParseException err) {
-                        StringBuilder sb = new StringBuilder("Cannot parse JSON result ["). //$NON-NLS-1$
-                        append(request.getMethod())
-                                                                                          .append(" ") //$NON-NLS-1$
-                                                                                          .append(request.getURI()
-                                                                                                         .toASCIIString())
-                                                                                          .append("][).append(") //$NON-NLS-1$
-                                                                                          .append(response.getStatusLine()
-                                                                                                          .getStatusCode())
-                                                                                          .append("][") //$NON-NLS-1$
-                                                                                          .append(response.getStatusLine()
-                                                                                                          .getReasonPhrase())
-                                                                                          .append("] ") //$NON-NLS-1$
-                                                                                          .append(err.getClass()
-                                                                                                     .getSimpleName())
-                                                                                          .append("=") //$NON-NLS-1$
-                                                                                          .append(err.getMessage());
-                        final String msg = sb.toString();
-                        throw new JsonParseException(msg, err.getLocation());
-                    }
-                } finally {
-                    parser.close();
-                    reader.close();
-                }
             } finally {
                 response.close();
             }
@@ -152,5 +194,4 @@ public class WebClient {
             // FIXME:log ?
         }
     }
-
 }

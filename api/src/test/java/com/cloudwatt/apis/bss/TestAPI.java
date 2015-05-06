@@ -14,6 +14,13 @@ import com.google.common.base.Optional;
 @SuppressWarnings("nls")
 public class TestAPI {
 
+    /**
+     * Display results of common API
+     * 
+     * @param api
+     * @throws IOException
+     * @throws TooManyRequestsException
+     */
     public static void testCommonApi(CommonApi api) throws IOException, TooManyRequestsException {
         System.out.println("Version: " + api.getVersion());
         for (Locale locale : new Locale[] { Locale.FRANCE, Locale.KOREA, Locale.US }) {
@@ -22,7 +29,14 @@ public class TestAPI {
         }
     }
 
-    public static void testAccountApi(AccountApi api) throws IOException, TooManyRequestsException {
+    /**
+     * Dump account information
+     * 
+     * @param api
+     * @throws IOException
+     * @throws TooManyRequestsException
+     */
+    private static void testAccountApi(AccountApi api) throws IOException, TooManyRequestsException {
         Optional<AccountDetailApi> detailsApi = api.getAccountDetails();
         if (detailsApi.isPresent()) {
             final AccountDetails account = detailsApi.get().get();
@@ -34,8 +48,15 @@ public class TestAPI {
     }
 
     public static void main(String... args) throws IOException, TooManyRequestsException {
+        if (args.length < 2) {
+            System.err.println("Usage: email password");
+            return;
+        }
+        final String email = args[0];
+        final String password = args[1];
         // Step 1 : credentials
-        BSSAcountFactory factory = new BSSAcountFactory.Builder(args[0], args[1]).build();
+        final BSSAcountFactory factory = new BSSAcountFactory.Builder(email, password).overrideUserAgent("MyTestApi")
+                                                                                      .build();
 
         System.out.println("=== Global public calls");
         testCommonApi(factory.getHandler().getCommmonApi());
