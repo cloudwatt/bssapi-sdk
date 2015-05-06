@@ -12,4 +12,4 @@ This API is intended for users that would like to use advanced Cloudwatt feature
 Using it
 --------
 
-Have a look at the example file [TestApi.java file](../../blob/master/api/src/test/java/com/cloudwatt/apis/bss/TestAPI.java) to show you to use easily the API.
+Have a look at the example file [TestApi.java file](../blob/master/api/src/test/java/com/cloudwatt/apis/bss/TestAPI.java) to show you to use easily the API.
