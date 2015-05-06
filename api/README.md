@@ -9,4 +9,7 @@ This API is intended for users that would like to use advanced Cloudwatt feature
 # Get Invoice informations
 # Get consumption in real time...
 
-This directory contains the api itself (api directory) and several working examples
+Using it
+--------
+
+Have a look at the example file [TestApi.java file](src/test/java/com/cloudwatt/apis/bss/TestApi.java) to show you to use easily the API.
