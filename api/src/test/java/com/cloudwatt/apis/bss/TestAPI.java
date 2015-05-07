@@ -147,8 +147,8 @@ public class TestAPI {
                             System.out.println("- Tenants owned not available");
                         }
                     }
-                    System.out.println("Got account information in " + (System.currentTimeMillis() - startAccount)
-                                       + " ms");
+                    System.out.println("  Got account " + a.getCustomerId() + " information in "
+                                       + (System.currentTimeMillis() - startAccount) + " ms");
                 }
             }
         } catch (IOException err) {
