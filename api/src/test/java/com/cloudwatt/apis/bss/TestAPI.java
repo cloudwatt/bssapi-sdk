@@ -71,13 +71,16 @@ public class TestAPI {
 
             final BSSApiHandle mainApi = factory.getHandle();
 
+            System.out.println("Connected as " + mainApi.getIdentity().getEmail() + ", name="
+                               + mainApi.getIdentity().getName() + ", id=" + mainApi.getIdentity().getId() + "\n");
+
             System.out.println("=== Tenants I can access\n Tenant Identifier               \tenabled\tTenant Name\tTenant Description");
             for (TenantIFace t : mainApi.getTenantsList()) {
                 System.out.println(" " + t.getId() + "\t" + t.isEnabled() + "\t" + t.getName() + "\t"
                                    + t.getDescription());
             }
 
-            System.out.println("=== Global public calls");
+            System.out.println("\n=== Global public calls");
 
             // Step 2, we can now play with the API
             testCommonApi(mainApi.getCommmonApi());

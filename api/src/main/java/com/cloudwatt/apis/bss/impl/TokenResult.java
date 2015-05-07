@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import com.cloudwatt.apis.bss.spec.domain.Identity;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -175,7 +176,7 @@ public class TokenResult {
     }
 
     @JsonInclude(Include.NON_EMPTY)
-    public static class UserIAM {
+    public static class UserIAM implements Identity {
 
         public UserIAM() {
         }
@@ -203,6 +204,7 @@ public class TokenResult {
          * 
          * @return the id
          */
+        @Override
         public String getId() {
             return id;
         }
@@ -221,6 +223,7 @@ public class TokenResult {
          * 
          * @return the name
          */
+        @Override
         public String getName() {
             return name;
         }
@@ -239,6 +242,7 @@ public class TokenResult {
          * 
          * @return the email
          */
+        @Override
         public String getEmail() {
             return email;
         }
