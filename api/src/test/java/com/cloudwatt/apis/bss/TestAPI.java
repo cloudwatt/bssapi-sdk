@@ -1,7 +1,9 @@
 package com.cloudwatt.apis.bss;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
@@ -78,9 +80,10 @@ public class TestAPI {
 
             System.out.println("Connected as " + mainApi.getIdentity().getEmail() + ", name="
                                + mainApi.getIdentity().getName() + ", id=" + mainApi.getIdentity().getId() + "\n");
-
+            final Map<String, TenantIFace> idTenants = new HashMap<String, TenantIFace>();
             System.out.println("=== Tenants I can access\n Tenant Identifier               \tenabled\tTenant Name\tTenant Description");
             for (TenantIFace t : mainApi.getTenantsList()) {
+                idTenants.put(t.getId(), t);
                 System.out.println(" " + t.getId() + "\t" + t.isEnabled() + "\t" + t.getName() + "\t"
                                    + t.getDescription());
             }
@@ -116,20 +119,28 @@ public class TestAPI {
                         if (rolesApi.isPresent()) {
                             System.out.println("+ Listing of Roles");
                             for (IdentityToAccountRole id : rolesApi.get().get()) {
-                                System.out.println("\t\t" + id.getUserName() + " (" + id.getUserEmail()
-                                                   + ") has roles " + id.getUsageType());
+                                System.out.println("\t" + id.getUserName() + " (" + id.getUserEmail() + ") has roles "
+                                                   + id.getUsageType());
                             }
                         } else {
                             System.out.println("- Account roles not available");
                         }
                     }
+                    // List the tenants owned by account
                     {
                         Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
                         if (myApi.isPresent()) {
                             System.out.println("+ Listing of Tenants owned");
                             for (OwnedTenant id : myApi.get().get()) {
-                                System.out.println("\t\t" + id.getTenantId() + " (" + id.getTenantType()
-                                                   + ") created the " + id.getCreationTime());
+                                System.out.print("\t" + id.getTenantId() + " (" + id.getTenantType() + ") created the "
+                                                 + id.getCreationTime());
+                                TenantIFace ta = idTenants.get(id.getTenantId());
+                                if (ta != null) {
+                                    System.out.println("\t Caller has access to " + ta.getName() + ", enabled="
+                                                       + ta.isEnabled());
+                                } else {
+                                    System.out.println("\t No access");
+                                }
                             }
                         } else {
                             System.out.println("- Tenants owned not available");
