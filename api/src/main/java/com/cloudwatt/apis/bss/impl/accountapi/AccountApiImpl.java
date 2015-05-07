@@ -8,7 +8,7 @@ import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRoles;
-import com.cloudwatt.apis.bss.spec.domain.BSSCap;
+import com.cloudwatt.apis.bss.spec.domain.BSSCap.KNOWN_CAPS;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
@@ -19,10 +19,17 @@ public class AccountApiImpl implements AccountApi {
 
     private final ApiContext context;
 
+    private <T, T2 extends T> Optional<T> buildApi(KNOWN_CAPS capabilityRequired, T2 api) {
+        if (account.getCaps().contains(capabilityRequired.name())) {
+            return Optional.<T> of(api);
+        } else {
+            return Optional.<T> absent();
+        }
+    }
+
     @Override
     public Optional<AccountDetailApi> getAccountDetails() throws IOException {
-        return Optional.<AccountDetailApi> fromNullable(account.getCaps()
-                                                               .contains(BSSCap.KNOWN_CAPS.ACCOUNT_SHOW.name()) ? new AccountDetailApi() {
+        return buildApi(KNOWN_CAPS.ACCOUNT_SHOW, new AccountDetailApi() {
 
             @Override
             public AccountDetails get() throws IOException, TooManyRequestsException {
@@ -33,7 +40,7 @@ public class AccountApiImpl implements AccountApi {
                                                                 Optional.<TokenAccess> of(context.getTokenAccess()))
                               .get();
             }
-        } : null);
+        });
     }
 
     public AccountApiImpl(AccountWithRoles account, ApiContext context) {

@@ -96,7 +96,8 @@ public class TestAPI {
                         if (detailsApi.isPresent()) {
                             final AccountDetails account = detailsApi.get().get();
                             System.out.println("+ Account details: " + account.getCustomerId() + " - "
-                                               + account.getName() + ", " + account.getBillingAddress());
+                                               + account.getName() + ", " + account.getBillingAddress() + ", city="
+                                               + account.getBillingCity() + ", caps=" + a.getCaps());
                         } else {
                             // Ooops, we cannot see the details, we don't have the rights to
                             System.out.println("- Account details not available");
