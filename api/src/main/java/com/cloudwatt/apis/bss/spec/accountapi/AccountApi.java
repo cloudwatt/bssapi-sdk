@@ -28,4 +28,13 @@ public interface AccountApi {
      */
     public Optional<AccountRolesListApi> getRolesListApi() throws IOException, TooManyRequestsException;
 
+    /**
+     * Retrieve the list of owned tenants for the account, ie: the tenants the account is paying for
+     * 
+     * @return {@link Optional#absent()} if API is not availble for the logged user, the API otherwise
+     * @throws IOException
+     * @throws TooManyRequestsException
+     */
+    public Optional<OwnedTenantsListApi> getOwnedTenantsApi() throws IOException, TooManyRequestsException;
+
 }

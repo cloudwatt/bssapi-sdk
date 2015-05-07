@@ -1,6 +1,8 @@
 package com.cloudwatt.apis.bss.impl.accountapi;
 
+import java.util.Date;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
+import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -70,6 +72,69 @@ class SerialDetails {
 
         public Iterable<IdentityToAccountRole> getRoles() {
             return roles;
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class OwnedTenantImpl implements OwnedTenant {
+
+        private final Date date_entered;
+
+        private final String customerId;
+
+        private final String type;
+
+        private final String tenantId;
+
+        @Override
+        public Date getCreationTime() {
+            return date_entered;
+        }
+
+        @Override
+        public String getCustomerId() {
+            return customerId;
+        }
+
+        @Override
+        public String getTenantType() {
+            return type;
+        }
+
+        @Override
+        public String getTenantId() {
+            return tenantId;
+        }
+
+        @JsonCreator
+        public OwnedTenantImpl(@JsonProperty(value = "date_entered", required = true) Date date_entered,
+                @JsonProperty(value = "customerId", required = true) String customerId,
+                @JsonProperty(value = "type", required = false) String type,
+                @JsonProperty(value = "tenantId", required = true) String tenantId) {
+            super();
+            this.date_entered = date_entered;
+            this.customerId = customerId;
+            this.type = type;
+            this.tenantId = tenantId;
+        }
+    }
+
+    public static class CollectionOfOwnedTenants {
+
+        @JsonCreator
+        public CollectionOfOwnedTenants(@JsonUnwrapped Iterable<OwnedTenantImpl> tenants) {
+            super();
+            ImmutableList.Builder<OwnedTenant> rolesBuilder = new ImmutableList.Builder<OwnedTenant>();
+            for (OwnedTenantImpl r : tenants) {
+                rolesBuilder.add(r);
+            }
+            this.tenants = rolesBuilder.build();
+        }
+
+        private final Iterable<OwnedTenant> tenants;
+
+        public Iterable<OwnedTenant> getTenants() {
+            return tenants;
         }
     }
 

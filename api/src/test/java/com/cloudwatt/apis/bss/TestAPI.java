@@ -6,10 +6,12 @@ import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
+import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
+import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
@@ -119,6 +121,18 @@ public class TestAPI {
                             }
                         } else {
                             System.out.println("- Account roles not available");
+                        }
+                    }
+                    {
+                        Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
+                        if (myApi.isPresent()) {
+                            System.out.println("+ Listing of Tenants owned");
+                            for (OwnedTenant id : myApi.get().get()) {
+                                System.out.println("\t\t" + id.getTenantId() + " (" + id.getTenantType()
+                                                   + ") created the " + id.getCreationTime());
+                            }
+                        } else {
+                            System.out.println("- Tenants owned not available");
                         }
                     }
 

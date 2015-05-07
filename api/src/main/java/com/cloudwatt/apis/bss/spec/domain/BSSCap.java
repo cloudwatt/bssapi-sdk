@@ -18,11 +18,15 @@ public interface BSSCap {
         /**
          * Show detailed information about an account
          */
-        ACCOUNT_SHOW(),
+        ACCOUNT_SHOW,
         /**
          * Show all the Users and their roles having access to the account
          */
-        ACCOUNT_ROLES_LIST();
+        ACCOUNT_ROLES_LIST,
+        /**
+         * List the tenants owned by account
+         */
+        TENANTS_LIST;
     };
 
     /**
