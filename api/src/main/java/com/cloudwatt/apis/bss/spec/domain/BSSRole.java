@@ -21,7 +21,7 @@ public interface BSSRole {
     /**
      * Get the account
      * 
-     * @return
+     * @return the account
      */
     public Account getAccount();
 

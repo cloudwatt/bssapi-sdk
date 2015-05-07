@@ -12,7 +12,7 @@ import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRoles;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
-import com.cloudwatt.apis.bss.spec.domain.BSSApiHandler;
+import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.Identity;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
  * @author pierre souchay
  *
  */
-class BSSHandlerImpl implements BSSApiHandler {
+public class BSSHandlerImpl implements BSSApiHandle {
 
     private class AccountApiWrapper implements AccountWithRolesWithOperations {
 
@@ -64,7 +64,7 @@ class BSSHandlerImpl implements BSSApiHandler {
      * @param password
      * @param id
      */
-    BSSHandlerImpl(ApiContext context) throws IOException, TooManyRequestsException {
+    public BSSHandlerImpl(ApiContext context) throws IOException, TooManyRequestsException {
         this.context = context;
         this.identity = new CWIdentity(context.getTokenAccess().getUser().getId(),
                                        context.getTokenAccess().getUser().getName(),

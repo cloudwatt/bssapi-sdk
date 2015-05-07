@@ -91,7 +91,7 @@ public class TokenResult {
      * @param client
      * @param url
      * @param payload
-     * @return
+     * @return the token
      * @throws IOException, TooManyRequestsException
      */
     public static Optional<TokenResult> getToken(final WebClient client, String url, final AuthPayload payload)

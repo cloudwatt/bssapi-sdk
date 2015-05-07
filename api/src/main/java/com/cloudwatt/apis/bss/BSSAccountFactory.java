@@ -1,4 +1,4 @@
-package com.cloudwatt.apis.bss.impl;
+package com.cloudwatt.apis.bss;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -9,17 +9,56 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
+import com.cloudwatt.apis.bss.impl.ApiContext;
+import com.cloudwatt.apis.bss.impl.BSSHandlerImpl;
+import com.cloudwatt.apis.bss.impl.Constants;
+import com.cloudwatt.apis.bss.impl.TokenResult;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
-import com.cloudwatt.apis.bss.spec.domain.BSSApiHandler;
+import com.cloudwatt.apis.bss.impl.WebClient;
+import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
+import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
+import com.cloudwatt.apis.bss.spec.exceptions.IOExceptionLocalized;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
 
-public class BSSAcountFactory {
+/**
+ * Main Entry point.
+ * 
+ * Use the {@link Builder} to setup the parameters for connecting to the API, you can then call {@link Builder#build()}
+ * to get the handle and start working with the API.
+ * 
+ * <p>
+ * The typical use is the following:<br>
+ * </p>
+ * <p>
+ * <code>
+ *   BSSApiHandle handle = (new BSSAccountFactory.Builder(email, password).build()).getHandle();<br>
+ *   BSSApiHandle mainApi = factory.getHandle();<br>
+ *   <br>
+ *   // Work with accounts<br>
+ *   for (AccountWithRolesWithOperations account : mainApi.getAccounts()) {<br>
+ *     &nbsp;&nbsp;// Do something with account<br>
+ *     &nbsp;&nbsp;...<br>
+ *   }<br>
+ *   <br>
+ *   // Work with common API<br>
+ *   CommonApi commonApi = mainApi.getCommmonApi();<br>
+ *   // Get the public API version on the server<br>
+ *   commonApi.getVersion()<br>
+ *   ...
+ *   
+ * </code>
+ * </p>
+ * 
+ * @author pierre souchay
+ *
+ */
+public class BSSAccountFactory {
 
     /**
      * Get the client API version
      * 
-     * @return
+     * @return the client API version
      */
     public final static String getClientApiVersion() {
         return "0.2.0"; //$NON-NLS-1$
@@ -109,6 +148,14 @@ public class BSSAcountFactory {
         return value;
     }
 
+    /**
+     * Use the builder to connect to the API.
+     * 
+     * Only email and password are mandatory, use the methods of the builder only if you have some specific needs
+     * 
+     * @author pierre souchay
+     *
+     */
     public static class Builder {
 
         private String keystonePublicEndpoint = "https://identity.fr1.cloudwatt.com/v2.0";
@@ -161,7 +208,8 @@ public class BSSAcountFactory {
         }
 
         /**
-         * Set an HTTP Proxy
+         * Set an HTTP Proxy, use this method to configure a proxy if you need a proxy to connect to Cloudwatt Public
+         * APIs
          * 
          * @param proxy the proxy to use
          * @return ifself
@@ -180,7 +228,7 @@ public class BSSAcountFactory {
          * @throws IOException if connection cannot be made to APIs
          * @throws TooManyRequestsException If you try to call us too many times, too fast
          */
-        public BSSAcountFactory build() throws IOException, TooManyRequestsException {
+        public BSSAccountFactory build() throws IOException, TooManyRequestsException {
             final String url = buildTokensUrl(keystonePublicEndpoint);
             webClientBuilder.setDefaultHeaders(Collections.singleton(new BasicHeader("User-Agent", userAgent))); //$NON-NLS-1$
             final WebClient client = new WebClient(webClientBuilder.build());
@@ -190,32 +238,32 @@ public class BSSAcountFactory {
                                                                                                            password));
 
             if (!access.isPresent()) {
-                throw new IOException("Could no get token from URL: '" + url + "', got a HTTP 404 code");
+                throw new IOExceptionLocalized("IOExceptionLocalized.couldNotGetTokenFrom404", url); //$NON-NLS-1$
             }
 
-            return new BSSAcountFactory(client,
-                                        keystonePublicEndpoint,
-                                        bssApiForceURL,
-                                        email,
-                                        password,
-                                        access.get().getAccess());
+            return new BSSAccountFactory(client,
+                                         keystonePublicEndpoint,
+                                         bssApiForceURL,
+                                         email,
+                                         password,
+                                         access.get().getAccess());
         }
     }
 
     private final ApiContext context;
 
-    private BSSAcountFactory(final WebClient client, final String keystonePublicEndpoint, final String bssApi,
+    private BSSAccountFactory(final WebClient client, final String keystonePublicEndpoint, final String bssApi,
             final String email, final String password, final TokenAccess access) {
         this.context = new ApiContextImpl(keystonePublicEndpoint, client, bssApi, access, password);
     }
 
     /**
-     * Get the BSS API Handler
+     * Get the BSS API Handle, keep this object in your application to work with the API
      * 
      * @return the BSS API Handler, ready to use
      * @throws IOException, TooManyRequestsException
      */
-    public BSSApiHandler getHandler() throws IOException, TooManyRequestsException {
+    public BSSApiHandle getHandle() throws IOException, TooManyRequestsException {
         return new BSSHandlerImpl(context);
     }
 

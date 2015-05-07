@@ -2,10 +2,10 @@ package com.cloudwatt.apis.bss;
 
 import java.io.IOException;
 import java.util.Locale;
-import com.cloudwatt.apis.bss.impl.BSSAcountFactory;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
+import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
@@ -66,18 +66,20 @@ public class TestAPI {
             final String email = (args.length > 0) ? args[0] : getEnvOrExit("OS_USERNAME");
 
             // Step 1 : initialize API with credentials
-            final BSSAcountFactory factory = new BSSAcountFactory.Builder(email, password).build();
+            final BSSAccountFactory factory = new BSSAccountFactory.Builder(email, password).build();
+
+            final BSSApiHandle mainApi = factory.getHandle();
 
             System.out.println("=== Global public calls");
 
             // Step 2, we can now play with the API
-            testCommonApi(factory.getHandler().getCommmonApi());
+            testCommonApi(mainApi.getCommmonApi());
 
             System.out.println("\n=== Account Information");
 
             // Step 3, OK, lets have a look to the accounts: for each account, display all we can display
             {
-                for (AccountWithRolesWithOperations a : factory.getHandler().getAccounts()) {
+                for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
                     {
                         final Optional<AccountDetailApi> detailsApi = a.getApi().getAccountDetails();
                         // We check if we have the right to look at the details

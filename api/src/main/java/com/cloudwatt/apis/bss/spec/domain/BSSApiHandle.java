@@ -8,10 +8,12 @@ import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.google.common.base.Optional;
 
 /**
- * @author pierre
+ * The descriptor you can use to work with all the APIs
+ * 
+ * @author pierre souchay
  *
  */
-public interface BSSApiHandler {
+public interface BSSApiHandle {
 
     /**
      * Get the identity you are connected with

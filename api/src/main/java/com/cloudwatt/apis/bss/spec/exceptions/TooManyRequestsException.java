@@ -14,7 +14,7 @@ import com.google.common.base.Optional;
  * @author pierre souchay
  *
  */
-public class TooManyRequestsException extends Exception {
+public class TooManyRequestsException extends Exception implements LocalizedException {
 
     @Override
     public String getMessage() {
@@ -32,6 +32,7 @@ public class TooManyRequestsException extends Exception {
      * @param locale the locale to use
      * @return the message
      */
+    @Override
     public String getMessage(Locale locale) {
         if (blockedUntil.isPresent())
             return Messages.getString(locale, "TooManyRequestsException.withDate", method, uri, blockedUntil.get()); //$NON-NLS-1$

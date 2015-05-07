@@ -38,7 +38,7 @@ public class WebClient {
      * 
      * @param client
      */
-    WebClient(CloseableHttpClient client) {
+    public WebClient(CloseableHttpClient client) {
         this.client = client;
     }
 

@@ -8,7 +8,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
-public class GenericHorseException extends IOException {
+/**
+ * i18n ready exception for all Horse Exceptions
+ * 
+ * @author pierre souchay
+ *
+ */
+public class GenericHorseException extends IOException implements LocalizedException {
 
     /**
      * 
@@ -85,6 +91,7 @@ public class GenericHorseException extends IOException {
      * @param locale the locale to use
      * @return the message
      */
+    @Override
     public String getMessage(Locale locale) {
         return Messages.getString(locale,
                                   "GenericHorseException.message", method, uri, jsonError.errorCode, jsonError.description, String.valueOf(jsonError.data)); //$NON-NLS-1$
