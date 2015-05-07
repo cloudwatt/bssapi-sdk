@@ -2,7 +2,10 @@ package com.cloudwatt.apis.bss;
 
 import java.io.IOException;
 import java.util.Locale;
+import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
+import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
+import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
@@ -90,17 +93,32 @@ public class TestAPI {
             // Step 3, OK, lets have a look to the accounts: for each account, display all we can display
             {
                 for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
+                    final AccountApi api = a.getApi();
+                    System.out.println("\n*** Account " + a.getCustomerId());
                     {
-                        final Optional<AccountDetailApi> detailsApi = a.getApi().getAccountDetails();
+                        final Optional<AccountDetailApi> detailsApi = api.getAccountDetails();
                         // We check if we have the right to look at the details
                         if (detailsApi.isPresent()) {
                             final AccountDetails account = detailsApi.get().get();
-                            System.out.println("+ Account details: " + account.getCustomerId() + " - "
-                                               + account.getName() + ", " + account.getBillingAddress() + ", city="
-                                               + account.getBillingCity() + ", caps=" + a.getCaps());
+                            System.out.println("+ Account details: " + account.getName() + ", "
+                                               + account.getBillingAddress() + ", city=" + account.getBillingCity()
+                                               + ", caps=" + a.getCaps());
                         } else {
                             // Ooops, we cannot see the details, we don't have the rights to
                             System.out.println("- Account details not available");
+                        }
+                    }
+                    // Show Roles
+                    {
+                        Optional<AccountRolesListApi> rolesApi = api.getRolesListApi();
+                        if (rolesApi.isPresent()) {
+                            System.out.println("+ Listing of Roles");
+                            for (IdentityToAccountRole id : rolesApi.get().get()) {
+                                System.out.println("\t\t" + id.getUserName() + " (" + id.getUserEmail()
+                                                   + ") has roles " + id.getUsageType());
+                            }
+                        } else {
+                            System.out.println("- Account roles not available");
                         }
                     }
 

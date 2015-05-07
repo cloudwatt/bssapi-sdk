@@ -1,6 +1,7 @@
 package com.cloudwatt.apis.bss.spec.accountapi;
 
 import java.io.IOException;
+import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
 
 /**
@@ -16,6 +17,15 @@ public interface AccountApi {
      * 
      * @return the {@link AccountDetailApi}, if available
      */
-    public Optional<AccountDetailApi> getAccountDetails() throws IOException;
+    public Optional<AccountDetailApi> getAccountDetails() throws IOException, TooManyRequestsException;
+
+    /**
+     * If available, let you browse the users having roles on this account
+     * 
+     * @return the list of high level roles on the account
+     * @throws IOException
+     * @throws TooManyRequestsException
+     */
+    public Optional<AccountRolesListApi> getRolesListApi() throws IOException, TooManyRequestsException;
 
 }
