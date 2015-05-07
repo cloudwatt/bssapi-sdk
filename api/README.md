@@ -9,6 +9,13 @@ This API is intended for users that would like to use advanced Cloudwatt feature
 # Get Invoice informations
 # Get consumption in real time...
 
+Build
+-----
+
+Run maven 3+ with following command to build api package and Javadoc Jar:
+
+mvn package javadoc:jar
+
 Using it
 --------
 
