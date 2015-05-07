@@ -66,7 +66,7 @@ public class TestAPI {
      * @param args first parameter is email, second parameter is password
      */
     public static void main(String... args) {
-
+        final long start = System.currentTimeMillis();
         try {
 
             // Step 0, we parse command line
@@ -98,6 +98,7 @@ public class TestAPI {
             // Step 3, OK, lets have a look to the accounts: for each account, display all we can display
             {
                 for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
+                    final long startAccount = System.currentTimeMillis();
                     final AccountApi api = a.getApi();
                     System.out.println("\n*** Account " + a.getCustomerId());
                     {
@@ -146,7 +147,8 @@ public class TestAPI {
                             System.out.println("- Tenants owned not available");
                         }
                     }
-
+                    System.out.println("Got account information in " + (System.currentTimeMillis() - startAccount)
+                                       + " ms");
                 }
             }
         } catch (IOException err) {
@@ -157,5 +159,6 @@ public class TestAPI {
             System.err.println("Stop playing, you have been blocked: " + err.getLocalizedMessage());
             Runtime.getRuntime().exit(4);
         }
+        System.out.println("Finished in " + (System.currentTimeMillis() - start) + " ms");
     }
 }
