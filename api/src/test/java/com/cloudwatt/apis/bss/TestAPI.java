@@ -7,6 +7,7 @@ import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
+import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
 
@@ -69,6 +70,12 @@ public class TestAPI {
             final BSSAccountFactory factory = new BSSAccountFactory.Builder(email, password).build();
 
             final BSSApiHandle mainApi = factory.getHandle();
+
+            System.out.println("=== Tenants I can access\n Tenant Identifier               \tenabled\tTenant Name\tTenant Description");
+            for (TenantIFace t : mainApi.getTenantsList()) {
+                System.out.println(" " + t.getId() + "\t" + t.isEnabled() + "\t" + t.getName() + "\t"
+                                   + t.getDescription());
+            }
 
             System.out.println("=== Global public calls");
 

@@ -15,7 +15,6 @@ import com.cloudwatt.apis.bss.impl.Constants;
 import com.cloudwatt.apis.bss.impl.TokenResult;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.impl.WebClient;
-import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.exceptions.IOExceptionLocalized;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
@@ -131,6 +130,11 @@ public class BSSAccountFactory {
         @Override
         public TokenAccess getTokenAccess() throws IOException {
             return tokenAccess;
+        }
+
+        @Override
+        public String buildKeystoneUrl(String relativePath) {
+            return createRequest(keystonePublicEndpoint, relativePath, Collections.<String, String> emptyMap());
         }
 
     }

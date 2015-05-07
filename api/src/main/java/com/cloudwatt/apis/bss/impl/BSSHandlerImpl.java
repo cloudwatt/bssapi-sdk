@@ -8,12 +8,14 @@ import com.cloudwatt.apis.bss.impl.accountapi.AccountApiImpl;
 import com.cloudwatt.apis.bss.impl.commonapi.CommonApiImpl;
 import com.cloudwatt.apis.bss.impl.contactapi.AccountRoles;
 import com.cloudwatt.apis.bss.impl.contactapi.ContactInformationWithRoles;
+import com.cloudwatt.apis.bss.impl.domain.keystone.TenantsResult;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRoles;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.Identity;
+import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -111,5 +113,19 @@ public class BSSHandlerImpl implements BSSApiHandle {
                 return Optional.<AccountApi> of(new AccountApiImpl(r, context));
         }
         return Optional.<AccountApi> absent();
+    }
+
+    @Override
+    public Iterable<TenantIFace> getTenantsList() throws IOException, TooManyRequestsException {
+        final String url = context.buildKeystoneUrl("tenants");
+        Optional<TenantsResult> res = context.getWebClient()
+                                             .doRequestAndRetrieveResultAsJSON(TenantsResult.class,
+                                                                               new HttpGet(url),
+                                                                               Optional.of(context.getTokenAccess()));
+        if (!res.isPresent()) {
+            throw new IOException("HTTP 404 for " + url);
+        } else {
+            return res.get().getTenants();
+        }
     }
 }

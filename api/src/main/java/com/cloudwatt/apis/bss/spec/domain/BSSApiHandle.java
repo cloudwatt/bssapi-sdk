@@ -3,8 +3,11 @@
  */
 package com.cloudwatt.apis.bss.spec.domain;
 
+import java.io.IOException;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
+import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
+import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
 
 /**
@@ -35,6 +38,13 @@ public interface BSSApiHandle {
      * @return the CommonApi
      */
     public CommonApi getCommmonApi();
+
+    /**
+     * List the tenants I have access to
+     * 
+     * @return the list of tenants I can work with
+     */
+    public Iterable<TenantIFace> getTenantsList() throws IOException, TooManyRequestsException;
 
     /**
      * Get the account API

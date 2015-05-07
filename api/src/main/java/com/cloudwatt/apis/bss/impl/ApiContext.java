@@ -4,7 +4,15 @@ import java.io.IOException;
 import java.util.Map;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 
+/**
+ * Internal Use only
+ * 
+ * @author pierre souchay
+ *
+ */
 public interface ApiContext {
+
+    public String buildKeystoneUrl(String relativePath);
 
     public WebClient getWebClient();
 
