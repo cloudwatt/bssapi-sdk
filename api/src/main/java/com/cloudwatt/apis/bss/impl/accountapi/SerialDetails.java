@@ -1,13 +1,18 @@
 package com.cloudwatt.apis.bss.impl.accountapi;
 
+import java.net.URI;
 import java.util.Date;
+import java.util.Map;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
+import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
+import com.cloudwatt.apis.bss.spec.domain.account.billing.Payment;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 class SerialDetails {
 
@@ -136,6 +141,139 @@ class SerialDetails {
         public Iterable<OwnedTenant> getTenants() {
             return tenants;
         }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PaymentImpl implements Payment {
+
+        private final int id;
+
+        private final double amount;
+
+        private final Date create_date;
+
+        @Override
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public double getAmountInEuros() {
+            return amount;
+        }
+
+        @Override
+        public Date getCreateDate() {
+            return create_date;
+        }
+
+        @JsonCreator
+        public PaymentImpl(@JsonProperty(value = "id", required = false) int id,
+                @JsonProperty(value = "amount", required = false) double amount,
+                @JsonProperty(value = "create_date", required = false) Date create_date) {
+            super();
+            this.id = id;
+            this.amount = amount;
+            this.create_date = create_date;
+        }
+
+    }
+
+    public static class InvoiceImpl implements Invoice {
+
+        @JsonCreator
+        public InvoiceImpl(@JsonProperty(value = "id", required = false) int id,
+                @JsonProperty(value = "create_date", required = false) Date create_date,
+                @JsonProperty(value = "due_date", required = false) Date due_date,
+                @JsonProperty(value = "total", required = false) double total,
+                @JsonProperty(value = "balance", required = false) double balance,
+                @JsonProperty(value = "invoicesURI") Map<String, URI> invoicesURI,
+                @JsonProperty(value = "payments") Iterable<PaymentImpl> payments) {
+            super();
+            this.id = id;
+            this.create_date = create_date;
+            this.due_date = due_date;
+            this.total = total;
+            this.balance = balance;
+            this.invoicesURI = ImmutableMap.<String, URI> copyOf(invoicesURI);
+            {
+                ImmutableList.Builder<Payment> builder = new ImmutableList.Builder<Payment>();
+                for (PaymentImpl e : payments) {
+                    builder.add(e);
+                }
+                this.payments = builder.build();
+            }
+        }
+
+        private final int id;
+
+        private final Date create_date;
+
+        private final Date due_date;
+
+        private final double total;
+
+        private final double balance;
+
+        private final Map<String, URI> invoicesURI;
+
+        private final Iterable<Payment> payments;
+
+        @Override
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public Date getCreateDate() {
+            return create_date;
+        }
+
+        @Override
+        public Date getDueDate() {
+            return due_date;
+        }
+
+        @Override
+        public double getTotalInEuros() {
+            return total;
+        }
+
+        @Override
+        public double getBalance() {
+            return balance;
+        }
+
+        @Override
+        public Map<String, URI> getInvoicesURI() {
+            return invoicesURI;
+        }
+
+        @Override
+        public Iterable<Payment> getPayments() {
+            return payments;
+        }
+
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ListOfInvoicesImpl {
+
+        @JsonCreator
+        public ListOfInvoicesImpl(@JsonProperty("invoices") Iterable<InvoiceImpl> invoices) {
+            super();
+            ImmutableList.Builder<Invoice> builder = new ImmutableList.Builder<Invoice>();
+            for (InvoiceImpl e : invoices) {
+                builder.add(e);
+            }
+            this.invoices = builder.build();
+        }
+
+        public Iterable<Invoice> getInvoices() {
+            return invoices;
+        }
+
+        private final Iterable<Invoice> invoices;
     }
 
 }

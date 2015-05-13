@@ -20,6 +20,10 @@ public interface BSSCap {
          */
         ACCOUNT_SHOW,
         /**
+         * List the invoices for Given Account
+         */
+        BILLING_INVOICES,
+        /**
          * Show all the Users and their roles having access to the account
          */
         ACCOUNT_ROLES_LIST,

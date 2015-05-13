@@ -31,10 +31,19 @@ public interface AccountApi {
     /**
      * Retrieve the list of owned tenants for the account, ie: the tenants the account is paying for
      * 
-     * @return {@link Optional#absent()} if API is not availble for the logged user, the API otherwise
+     * @return {@link Optional#absent()} if API is not available for the logged user, the API otherwise
      * @throws IOException
      * @throws TooManyRequestsException
      */
     public Optional<OwnedTenantsListApi> getOwnedTenantsApi() throws IOException, TooManyRequestsException;
+
+    /**
+     * Retrieve the AccountInvoicesApi if available
+     * 
+     * @return {@link Optional#absent()} if not available, the Api otherwise
+     * @throws IOException
+     * @throws TooManyRequestsException
+     */
+    public Optional<AccountInvoicesApi> getInvoicesApi() throws IOException, TooManyRequestsException;
 
 }

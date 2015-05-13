@@ -1,11 +1,13 @@
 package com.cloudwatt.apis.bss;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
+import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
@@ -14,6 +16,7 @@ import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
+import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
@@ -145,6 +148,22 @@ public class TestAPI {
                             }
                         } else {
                             System.out.println("- Tenants owned not available");
+                        }
+                    }
+                    {
+                        Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
+                        if (myApi.isPresent()) {
+                            System.out.println("+ Listing of Invoices");
+                            for (Invoice invoice : myApi.get().getInvoices()) {
+                                System.out.print("\t" + invoice.getId() + " (" + invoice.getTotalInEuros()
+                                                 + "EUR) created the " + invoice.getCreateDate() + ", URLs: [");
+                                for (Map.Entry<String, URI> en : invoice.getInvoicesURI().entrySet()) {
+                                    System.out.print(" " + en.getKey() + ": " + en.getValue().toASCIIString());
+                                }
+                                System.out.println("]");
+                            }
+                        } else {
+                            System.out.println("- Invoice API is not available");
                         }
                     }
                     System.out.println("  Got account " + a.getCustomerId() + " information in "
