@@ -37,7 +37,7 @@ public class AccountApiImpl implements AccountApi {
     }
 
     @Override
-    public Optional<AccountDetailApi> getAccountDetails() throws IOException {
+    public Optional<AccountDetailApi> getAccountDetails() {
         return buildApi(KNOWN_CAPS.ACCOUNT_SHOW, new AccountDetailApi() {
 
             @Override
@@ -58,7 +58,7 @@ public class AccountApiImpl implements AccountApi {
     }
 
     @Override
-    public Optional<AccountRolesListApi> getRolesListApi() throws IOException, TooManyRequestsException {
+    public Optional<AccountRolesListApi> getRolesListApi() {
         return buildApi(KNOWN_CAPS.ACCOUNT_ROLES_LIST, new AccountRolesListApi() {
 
             @Override
@@ -75,7 +75,7 @@ public class AccountApiImpl implements AccountApi {
     }
 
     @Override
-    public Optional<OwnedTenantsListApi> getOwnedTenantsApi() throws IOException, TooManyRequestsException {
+    public Optional<OwnedTenantsListApi> getOwnedTenantsApi() {
         return buildApi(KNOWN_CAPS.TENANTS_LIST, new OwnedTenantsListApi() {
 
             @Override
@@ -92,7 +92,7 @@ public class AccountApiImpl implements AccountApi {
     }
 
     @Override
-    public Optional<AccountInvoicesApi> getInvoicesApi() throws IOException, TooManyRequestsException {
+    public Optional<AccountInvoicesApi> getInvoicesApi() {
         return buildApi(KNOWN_CAPS.BILLING_INVOICES, new AccountInvoicesApi() {
 
             @Override
