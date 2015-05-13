@@ -9,6 +9,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
@@ -18,10 +22,13 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.table.AbstractTableModel;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
@@ -36,6 +43,7 @@ import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class TestApiGUI {
 
@@ -43,8 +51,11 @@ public class TestApiGUI {
 
         private final AccountWithRolesWithOperations account;
 
-        public AccountFrame(AccountWithRolesWithOperations account) {
+        private final ExecutorService executor;
+
+        public AccountFrame(ExecutorService executor, AccountWithRolesWithOperations account) {
             super(new GridBagLayout());
+            this.executor = executor;
             this.account = account;
             GridBagConstraints c = new GridBagConstraints();
             c.gridx = 0;
@@ -121,114 +132,174 @@ public class TestApiGUI {
 
         public void refresh() throws IOException, TooManyRequestsException {
             final AccountApi api = account.getApi();
-            {
-                final Optional<AccountDetailApi> detailsApi = api.getAccountDetails();
-                // We check if we have the right to look at the details
-                if (detailsApi.isPresent()) {
-                    final AccountDetails account = detailsApi.get().get();
-                    SwingUtilities.invokeLater(new Runnable() {
+            executor.submit(new Runnable() {
 
-                        @Override
-                        public void run() {
-                            detailsWidget.setText("+ Account details: " + account.getName() + "\n"
-                                                  + account.getBillingAddress() + "\ncity=" + account.getBillingCity());
+                @Override
+                public void run() {
+                    try {
+                        final Optional<AccountDetailApi> detailsApi = api.getAccountDetails();
+                        // We check if we have the right to look at the details
+                        if (detailsApi.isPresent()) {
+                            final AccountDetails account = detailsApi.get().get();
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    detailsWidget.setText("+ Account details: " + account.getName() + "\n"
+                                                          + account.getBillingAddress() + "\ncity="
+                                                          + account.getBillingCity());
+                                }
+                            });
+
+                        } else {
+                            // Ooops, we cannot see the details, we don't have the rights to
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    detailsWidget.setText("- Account details not available");
+                                }
+                            });
                         }
-                    });
-
-                } else {
-                    // Ooops, we cannot see the details, we don't have the rights to
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            detailsWidget.setText("- Account details not available");
-                        }
-                    });
-                }
-            }
-            // Show Roles
-            {
-                Optional<AccountRolesListApi> rolesApi = api.getRolesListApi();
-                if (rolesApi.isPresent()) {
-                    final StringBuilder sb = new StringBuilder();
-                    for (IdentityToAccountRole id : rolesApi.get().get()) {
-                        sb.append(id.getUserName() + " (" + id.getUserEmail() + ") has roles " + id.getUsageType())
-                          .append("\n");
-                    }
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            rolesWidget.setText(sb.toString());
-                        }
-                    });
-                } else {
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            rolesWidget.setText("- Account roles not available");
-                        }
-                    });
-                }
-            }
-            // List the tenants owned by account
-            {
-                Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
-                if (myApi.isPresent()) {
-                    final StringBuilder sb = new StringBuilder();
-                    for (OwnedTenant id : myApi.get().get()) {
-
-                        sb.append(id.getTenantId() + " (" + id.getTenantType() + ") created the "
-                                  + id.getCreationTime()).append("\n");
-                    }
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            ownedTenantsWidget.setText(sb.toString());
-                        }
-                    });
-                } else {
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            ownedTenantsWidget.setText("- Tenants owned not available");
-
-                        }
-                    });
-                }
-            }
-            {
-                Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
-                if (myApi.isPresent()) {
-                    final StringBuilder sb = new StringBuilder();
-                    for (Invoice invoice : myApi.get().getInvoices()) {
-                        sb.append(invoice.getId() + " (" + invoice.getTotalInEuros() + "EUR) created the "
-                                  + invoice.getCreateDate() + "\n");
-                        for (Map.Entry<String, URI> en : invoice.getInvoicesURI().entrySet()) {
-                            sb.append("   - " + en.getKey() + ": " + en.getValue().toASCIIString()).append("\n");
-                        }
-                        sb.append("----\n");
+                    } catch (final Exception err) {
                         SwingUtilities.invokeLater(new Runnable() {
 
                             @Override
                             public void run() {
-                                invoicesWidget.setText(sb.toString());
+                                detailsWidget.setText("Failed to get account details: " + err.getMessage());
                             }
                         });
                     }
-                } else {
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            invoicesWidget.setText("- Invoice API is not available");
-                        }
-                    });
                 }
-            }
+            });
+            executor.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        Optional<AccountRolesListApi> rolesApi = api.getRolesListApi();
+                        if (rolesApi.isPresent()) {
+                            final StringBuilder sb = new StringBuilder();
+                            for (IdentityToAccountRole id : rolesApi.get().get()) {
+                                sb.append(id.getUserName() + " (" + id.getUserEmail() + ") has roles "
+                                          + id.getUsageType()).append("\n");
+                            }
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    rolesWidget.setText(sb.toString());
+                                }
+                            });
+                        } else {
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    rolesWidget.setText("- Account roles not available");
+                                }
+                            });
+                        }
+                    } catch (final Exception err) {
+                        SwingUtilities.invokeLater(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                rolesWidget.setText("Failed to get account roles: " + err.getMessage());
+                            }
+                        });
+                    }
+
+                }
+            });
+            executor.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    // List the tenants owned by account
+                    try {
+                        Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
+                        if (myApi.isPresent()) {
+                            final StringBuilder sb = new StringBuilder();
+                            for (OwnedTenant id : myApi.get().get()) {
+
+                                sb.append(id.getTenantId() + " (" + id.getTenantType() + ") created the "
+                                          + id.getCreationTime()).append("\n");
+                            }
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    ownedTenantsWidget.setText(sb.toString());
+                                }
+                            });
+                        } else {
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    ownedTenantsWidget.setText("- Tenants owned not available");
+
+                                }
+                            });
+                        }
+                    } catch (final Exception err) {
+                        SwingUtilities.invokeLater(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                ownedTenantsWidget.setText("Failed to get the tenants owned: " + err.getMessage());
+                            }
+                        });
+                    }
+
+                }
+            });
+            executor.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
+                        if (myApi.isPresent()) {
+                            final StringBuilder sb = new StringBuilder();
+                            for (Invoice invoice : myApi.get().getInvoices()) {
+                                sb.append(invoice.getId() + " (" + invoice.getTotalInEuros() + "EUR) created the "
+                                          + invoice.getCreateDate() + "\n");
+                                for (Map.Entry<String, URI> en : invoice.getInvoicesURI().entrySet()) {
+                                    sb.append("   - " + en.getKey() + ": " + en.getValue().toASCIIString())
+                                      .append("\n");
+                                }
+                                sb.append("----\n");
+                                SwingUtilities.invokeLater(new Runnable() {
+
+                                    @Override
+                                    public void run() {
+                                        invoicesWidget.setText(sb.toString());
+                                    }
+                                });
+                            }
+                        } else {
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    invoicesWidget.setText("- Invoice API is not available");
+                                }
+                            });
+                        }
+                    } catch (final Exception err) {
+                        SwingUtilities.invokeLater(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                invoicesWidget.setText("Failed to get the invoices: " + err.getMessage());
+                            }
+                        });
+                    }
+
+                }
+            });
 
         }
     }
@@ -260,6 +331,17 @@ public class TestApiGUI {
                 final JFrame jf = new JFrame("Cloudwatt Public API Demonstration");
                 jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 final JTabbedPane tab = new JTabbedPane();
+                final ExecutorService executor = Executors.newFixedThreadPool(4, new ThreadFactory() {
+
+                    private final AtomicInteger counter = new AtomicInteger(1);
+
+                    @Override
+                    public Thread newThread(Runnable target) {
+                        Thread t = new Thread(target, "cw-gui-demo-thread-" + counter.incrementAndGet());
+                        t.setDaemon(true);
+                        return t;
+                    }
+                });
                 JPanel contactPanel = new JPanel(new BorderLayout(5, 5));
                 {
                     JPanel connectPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 5));
@@ -288,7 +370,7 @@ public class TestApiGUI {
                                 tab.revalidate();
                             } else {
                                 setEnabled(false);
-                                Thread t = new Thread("connectThread") {
+                                executor.execute(new Runnable() {
 
                                     @Override
                                     public void run() {
@@ -315,9 +397,92 @@ public class TestApiGUI {
 
                                                 @Override
                                                 public void run() {
+
+                                                    executor.execute(new Runnable() {
+
+                                                        @Override
+                                                        public void run() {
+                                                            try {
+                                                                final ImmutableList<TenantIFace> tenants;
+                                                                {
+                                                                    ImmutableList.Builder<TenantIFace> builder = new ImmutableList.Builder<TenantIFace>();
+                                                                    for (TenantIFace t : mainApi.getTenantsList()) {
+                                                                        builder.add(t);
+                                                                    }
+                                                                    tenants = builder.build();
+                                                                }
+                                                                final AbstractTableModel model = new AbstractTableModel() {
+
+                                                                    @Override
+                                                                    public String getColumnName(int column) {
+                                                                        switch (column) {
+                                                                            case 0:
+                                                                                return "id";
+                                                                            case 1:
+                                                                                return "name";
+                                                                            case 2:
+                                                                                return "description";
+                                                                            default:
+                                                                                return "enabled";
+                                                                        }
+                                                                    }
+
+                                                                    @Override
+                                                                    public Class<?> getColumnClass(int columnIndex) {
+                                                                        if (columnIndex > 2)
+                                                                            return Boolean.class;
+                                                                        return super.getColumnClass(columnIndex);
+                                                                    }
+
+                                                                    @Override
+                                                                    public Object getValueAt(int rowIndex,
+                                                                            int columnIndex) {
+                                                                        TenantIFace t = tenants.get(rowIndex);
+                                                                        switch (columnIndex) {
+                                                                            case 0:
+                                                                                return t.getId();
+                                                                            case 1:
+                                                                                return t.getName();
+                                                                            case 2:
+                                                                                return t.getDescription();
+                                                                            default:
+                                                                                return t.isEnabled();
+                                                                        }
+                                                                    }
+
+                                                                    @Override
+                                                                    public int getRowCount() {
+                                                                        return tenants.size();
+                                                                    }
+
+                                                                    @Override
+                                                                    public int getColumnCount() {
+                                                                        return 4;
+                                                                    }
+                                                                };
+                                                                SwingUtilities.invokeLater(new Runnable() {
+
+                                                                    @Override
+                                                                    public void run() {
+                                                                        tab.insertTab("My Tenants",
+                                                                                      null,
+                                                                                      new JScrollPane(new JTable(model)),
+                                                                                      "The tenants I can access",
+                                                                                      1);
+                                                                    }
+                                                                });
+                                                            } catch (Exception err) {
+                                                                JOptionPane.showMessageDialog(jf,
+                                                                                              "Cannot get the list of my tenants: "
+                                                                                                      + err.getLocalizedMessage());
+                                                            }
+
+                                                        }
+                                                    });
+
                                                     for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
                                                         tab.add(a.getCustomerId() + "roles=" + a.getNamedRoles(),
-                                                                new AccountFrame(a));
+                                                                new AccountFrame(executor, a));
                                                     }
                                                     tab.revalidate();
                                                 }
@@ -330,8 +495,7 @@ public class TestApiGUI {
                                             setEnabled(true);
                                         }
                                     }
-                                };
-                                t.start();
+                                });
 
                             }
 
