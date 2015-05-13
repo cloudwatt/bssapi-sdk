@@ -1,16 +1,26 @@
 package com.cloudwatt.apis.bss;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
@@ -227,53 +237,125 @@ public class TestApiGUI {
      * Load environment variable
      * 
      * @param varName the var name as set in the shell
-     * @return the value if set in environement, exit the program otherwise
+     * @return the value if set in environment, exit the program otherwise
      */
-    private static String getEnvOrExit(String varName) {
+    private static String getEnvOrExit(String varName, String defaultValue) {
         String val = System.getenv(varName);
         if (val != null) {
             System.out.println(varName + " has been read from environment");
             return val;
         }
-        System.err.println("Missing parameter and parameter not provided into environement variable " + varName
-                           + "\n\tUsage: [email] [password]");
-        Runtime.getRuntime().exit(2);
-        return null;
+        return defaultValue;
     }
 
     public static void main(String[] args) throws Exception {
         // Step 0, we parse command line
-        final String password = (args.length > 1) ? args[1] : getEnvOrExit("OS_PASSWORD");
-        final String email = (args.length > 0) ? args[0] : getEnvOrExit("OS_USERNAME");
+        final String passwordInit = (args.length > 1) ? args[1] : getEnvOrExit("OS_PASSWORD", "");
+        final String email = (args.length > 0) ? args[0] : getEnvOrExit("OS_USERNAME", "email@example.com");
 
-        // Step 1 : initialize API with credentials
-        final BSSAccountFactory factory = new BSSAccountFactory.Builder(email, password).build();
-
-        final BSSApiHandle mainApi = factory.getHandle();
-
-        System.out.println("Connected as " + mainApi.getIdentity().getEmail() + ", name="
-                           + mainApi.getIdentity().getName() + ", id=" + mainApi.getIdentity().getId() + "\n");
-        final Map<String, TenantIFace> idTenants = new HashMap<String, TenantIFace>();
-        System.out.println("=== Tenants I can access\n Tenant Identifier               \tenabled\tTenant Name\tTenant Description");
-        for (TenantIFace t : mainApi.getTenantsList()) {
-            idTenants.put(t.getId(), t);
-            System.out.println(" " + t.getId() + "\t" + t.isEnabled() + "\t" + t.getName() + "\t" + t.getDescription());
-        }
-
-        System.out.println("\n=== Account Information");
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-                JFrame jf = new JFrame("Accounts information");
+                final JFrame jf = new JFrame("Cloudwatt Public API Demonstration");
                 jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                JTabbedPane tab = new JTabbedPane();
-                // Step 3, OK, lets have a look to the accounts: for each account, display all we can display
+                final JTabbedPane tab = new JTabbedPane();
+                JPanel contactPanel = new JPanel(new BorderLayout(5, 5));
                 {
-                    for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
-                        tab.add(a.getCustomerId() + "roles=" + a.getNamedRoles(), new AccountFrame(a));
+                    JPanel connectPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 5));
+                    contactPanel.add(connectPanel, BorderLayout.NORTH);
+                    final JTextField userF = new JTextField(email);
+                    final JPasswordField passwordF = new JPasswordField(passwordInit);
+                    connectPanel.add(new JLabel("Email:"));
+                    connectPanel.add(userF);
+                    connectPanel.add(new JLabel("Password:"));
+                    connectPanel.add(passwordF);
+                    final Action connect = new AbstractAction() {
+
+                        private boolean connected = false;
+                        {
+                            putValue(Action.NAME, "Connect");
+                        }
+
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            if (connected) {
+                                connected = false;
+                                putValue(Action.NAME, "Connect to API");
+                                while (tab.getTabCount() > 1) {
+                                    tab.removeTabAt(1);
+                                }
+                                tab.revalidate();
+                            } else {
+                                setEnabled(false);
+                                Thread t = new Thread("connectThread") {
+
+                                    @Override
+                                    public void run() {
+                                        try {
+
+                                            // Step 1 : initialize API with credentials
+                                            final BSSAccountFactory factory = new BSSAccountFactory.Builder(userF.getText(),
+                                                                                                            new String(passwordF.getPassword())).build();
+
+                                            final BSSApiHandle mainApi = factory.getHandle();
+                                            connected = true;
+                                            putValue(Action.NAME, "Disconnect");
+                                            System.out.println("Connected as " + mainApi.getIdentity().getEmail()
+                                                               + ", name=" + mainApi.getIdentity().getName() + ", id="
+                                                               + mainApi.getIdentity().getId() + "\n");
+                                            final Map<String, TenantIFace> idTenants = new HashMap<String, TenantIFace>();
+                                            System.out.println("=== Tenants I can access\n Tenant Identifier               \tenabled\tTenant Name\tTenant Description");
+                                            for (TenantIFace t : mainApi.getTenantsList()) {
+                                                idTenants.put(t.getId(), t);
+                                                System.out.println(" " + t.getId() + "\t" + t.isEnabled() + "\t"
+                                                                   + t.getName() + "\t" + t.getDescription());
+                                            }
+                                            SwingUtilities.invokeLater(new Runnable() {
+
+                                                @Override
+                                                public void run() {
+                                                    for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
+                                                        tab.add(a.getCustomerId() + "roles=" + a.getNamedRoles(),
+                                                                new AccountFrame(a));
+                                                    }
+                                                    tab.revalidate();
+                                                }
+                                            });
+                                        } catch (Exception err) {
+                                            JOptionPane.showMessageDialog(jf,
+                                                                          "Error while connecting: "
+                                                                                  + err.getLocalizedMessage());
+                                        } finally {
+                                            setEnabled(true);
+                                        }
+                                    }
+                                };
+                                t.start();
+
+                            }
+
+                        }
+                    };
+                    // South
+                    {
+                        JPanel south = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 5));
+                        south.add(new JButton(connect));
+                        contactPanel.add(south, BorderLayout.SOUTH);
+
                     }
+                    // Center
+                    {
+                        JEditorPane text = new JEditorPane("text/html",
+                                                           "<html><h1>Cloudwatt Public API Demo</h1><p>A simple Cloudwatt BSS Public API example that explains how to create a rich application displaying Cloudwatt public APIs.</p><p>By Pierre Souchay</p></html>");
+                        contactPanel.add(text, BorderLayout.CENTER);
+                    }
+
                 }
+                // contactPanel.add(new )
+                tab.add("Connection", contactPanel);
+                // Step 3, OK, lets have a look to the accounts: for each account, display all we can display
+
                 jf.add(tab);
                 jf.pack();
                 jf.setVisible(true);
@@ -281,5 +363,4 @@ public class TestApiGUI {
         });
 
     }
-
 }
