@@ -3,11 +3,13 @@
  */
 package com.cloudwatt.apis.bss.spec.exceptions;
 
+import java.net.URI;
+
 /**
  * @author pierre
  *
  */
-public class WrongCredentialsException extends IOExceptionLocalized {
+public class WrongCredentialsException extends HttpUnexpectedError {
 
     /**
      * 
@@ -17,7 +19,7 @@ public class WrongCredentialsException extends IOExceptionLocalized {
     /**
      * Wrong Credentials Exception
      */
-    public WrongCredentialsException(Throwable cause) {
-        super("WrongCredentialsException", cause.getMessage()); //$NON-NLS-1$
+    public WrongCredentialsException(URI uri, int httpCode, String message) {
+        super("WrongCredentialsException", uri, httpCode, message); //$NON-NLS-1$
     }
 }

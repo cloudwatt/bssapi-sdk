@@ -113,7 +113,7 @@ public class TokenResult {
             return client.doRequestAndRetrieveResultAsJSON(TokenResult.class, post, Optional.<TokenAccess> absent());
         } catch (HttpUnexpectedError err) {
             if (err.getHttpCode() == 401)
-                throw new WrongCredentialsException(err);
+                throw new WrongCredentialsException(post.getURI(), err.getHttpCode(), err.getHttpMessage());
             else
                 throw err;
         }

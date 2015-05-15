@@ -19,13 +19,30 @@ public class HttpUnexpectedError extends IOExceptionLocalized {
     /**
      * Constructor
      * 
+     * @param translation key
+     * @param uri The URI
+     * @param httpCode the HTTP Code
+     * @param httpMessage message
+     */
+    protected HttpUnexpectedError(String key, final URI uri, final int httpCode, final String httpMessage) {
+        super(key, uri.toASCIIString(), httpCode, httpMessage);
+        this.httpCode = httpCode;
+        this.httpMessage = httpMessage;
+    }
+
+    public String getHttpMessage() {
+        return httpMessage;
+    }
+
+    /**
+     * Constructor
+     * 
      * @param uri The URI
      * @param httpCode the HTTP Code
      * @param httpMessage message
      */
     public HttpUnexpectedError(final URI uri, final int httpCode, final String httpMessage) {
-        super("HttpUnexpectedError", uri.toASCIIString(), httpCode, httpMessage); //$NON-NLS-1$
-        this.httpCode = httpCode;
+        this("HttpUnexpectedError", uri, httpCode, httpMessage); //$NON-NLS-1$
     }
 
     public int getHttpCode() {
@@ -33,5 +50,7 @@ public class HttpUnexpectedError extends IOExceptionLocalized {
     }
 
     private final int httpCode;
+
+    private final String httpMessage;
 
 }
