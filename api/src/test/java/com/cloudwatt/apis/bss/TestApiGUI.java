@@ -1,11 +1,14 @@
 package com.cloudwatt.apis.bss;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -27,6 +30,9 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkEvent.EventType;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.table.AbstractTableModel;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
@@ -339,8 +345,8 @@ public class TestApiGUI {
                 {
                     JPanel connectPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 5));
                     contactPanel.add(connectPanel, BorderLayout.NORTH);
-                    final JTextField userF = new JTextField(email);
-                    final JPasswordField passwordF = new JPasswordField(passwordInit);
+                    final JTextField userF = new JTextField(email, 32);
+                    final JPasswordField passwordF = new JPasswordField(passwordInit, 16);
                     connectPanel.add(new JLabel("Email:"));
                     connectPanel.add(userF);
                     connectPanel.add(new JLabel("Password:"));
@@ -504,7 +510,26 @@ public class TestApiGUI {
                     // Center
                     {
                         JEditorPane text = new JEditorPane("text/html",
-                                                           "<html><h1>Cloudwatt Public API Demo</h1><p>A simple Cloudwatt BSS Public API example that explains how to create a rich application displaying Cloudwatt public APIs.</p><p>By Pierre Souchay</p></html>");
+                                                           "<html><h1>Cloudwatt Public API Demo</h1><p>A simple Cloudwatt BSS Public API example that explains how to create a rich application displaying Cloudwatt public APIs.</p><p>Simply use your Cloudwatt credentials to see your BSS accounts.</p><h2>Using the API</h2><p>Have a look at the source code of this example:<br> <a href=\"https://git.corp.cloudwatt.com/pierre.souchay/cloudwatt-pub-api-client/blob/master/api/src/test/java/com/cloudwatt/apis/bss/TestApiGUI.java\">https://git.corp.cloudwatt.com/pierre.souchay/cloudwatt-pub-api-client/blob/master/api/src/test/java/com/cloudwatt/apis/bss/TestApiGUI.java</a>.</p><p>There is also a much more simpler example:<br><a href=\"https://git.corp.cloudwatt.com/pierre.souchay/cloudwatt-pub-api-client/blob/master/api/src/test/java/com/cloudwatt/apis/bss/TestAPI.java\">https://git.corp.cloudwatt.com/pierre.souchay/cloudwatt-pub-api-client/blob/master/api/src/test/java/com/cloudwatt/apis/bss/TestAPI.java</a>.</p><p>By Pierre Souchay</p></html>");
+                        text.addHyperlinkListener(new HyperlinkListener() {
+
+                            @Override
+                            public void hyperlinkUpdate(HyperlinkEvent e) {
+                                if (e.getEventType() == EventType.ACTIVATED) {
+                                    try {
+                                        Desktop.getDesktop().browse(e.getURL().toURI());
+                                    } catch (IOException e1) {
+                                        // TODO Auto-generated catch block
+                                        e1.printStackTrace();
+                                    } catch (URISyntaxException e1) {
+                                        // TODO Auto-generated catch block
+                                        e1.printStackTrace();
+                                    }
+                                }
+
+                            }
+                        });
+                        text.setEditable(false);
                         contactPanel.add(text, BorderLayout.CENTER);
                     }
 
