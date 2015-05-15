@@ -9,7 +9,6 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -385,13 +384,6 @@ public class TestApiGUI {
                                             System.out.println("Connected as " + mainApi.getIdentity().getEmail()
                                                                + ", name=" + mainApi.getIdentity().getName() + ", id="
                                                                + mainApi.getIdentity().getId() + "\n");
-                                            final Map<String, TenantIFace> idTenants = new HashMap<String, TenantIFace>();
-                                            System.out.println("=== Tenants I can access\n Tenant Identifier               \tenabled\tTenant Name\tTenant Description");
-                                            for (TenantIFace t : mainApi.getTenantsList()) {
-                                                idTenants.put(t.getId(), t);
-                                                System.out.println(" " + t.getId() + "\t" + t.isEnabled() + "\t"
-                                                                   + t.getName() + "\t" + t.getDescription());
-                                            }
                                             SwingUtilities.invokeLater(new Runnable() {
 
                                                 @Override
