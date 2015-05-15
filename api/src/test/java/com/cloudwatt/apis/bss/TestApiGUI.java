@@ -70,13 +70,13 @@ public class TestApiGUI {
             c.weighty = 2;
             c.anchor = GridBagConstraints.EAST;
             c.gridwidth = 1;
-            add(new JLabel("Details"), c);
+            add(new JLabel("Details: "), c);
             c.gridy++;
-            add(new JLabel("Roles"), c);
+            add(new JLabel("Roles: "), c);
             c.gridy++;
-            add(new JLabel("Owned Tenants"), c);
+            add(new JLabel("Owned Tenants: "), c);
             c.gridy++;
-            add(new JLabel("Invoices"), c);
+            add(new JLabel("Invoices: "), c);
             c.gridy++;
             c.gridy = 0;
             c.gridx = 1;
@@ -312,7 +312,7 @@ public class TestApiGUI {
     private static String getEnvOrExit(String varName, String defaultValue) {
         String val = System.getenv(varName);
         if (val != null) {
-            System.out.println(varName + " has been read from environment");
+            System.out.println(varName + " has been read from environment"); //$NON-NLS-1$
             return val;
         }
         return defaultValue;
@@ -336,7 +336,7 @@ public class TestApiGUI {
 
                     @Override
                     public Thread newThread(Runnable target) {
-                        Thread t = new Thread(target, "cw-gui-demo-thread-" + counter.incrementAndGet());
+                        Thread t = new Thread(target, "cw-gui-demo-thread-" + counter.incrementAndGet()); //$NON-NLS-1$
                         t.setDaemon(true);
                         return t;
                     }

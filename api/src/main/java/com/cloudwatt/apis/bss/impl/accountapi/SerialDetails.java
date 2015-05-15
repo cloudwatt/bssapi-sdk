@@ -1,8 +1,13 @@
 package com.cloudwatt.apis.bss.impl.accountapi;
 
 import java.net.URI;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
@@ -80,6 +85,12 @@ class SerialDetails {
         }
     }
 
+    private final static SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", //$NON-NLS-1$
+                                                                                 Locale.ENGLISH);
+    static {
+        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class OwnedTenantImpl implements OwnedTenant {
 
@@ -112,12 +123,18 @@ class SerialDetails {
         }
 
         @JsonCreator
-        public OwnedTenantImpl(@JsonProperty(value = "date_entered", required = true) Date date_entered,
+        public OwnedTenantImpl(@JsonProperty(value = "date_entered", required = true) String date_entered,
                 @JsonProperty(value = "customerId", required = true) String customerId,
                 @JsonProperty(value = "type", required = false) String type,
                 @JsonProperty(value = "tenantId", required = true) String tenantId) {
             super();
-            this.date_entered = date_entered;
+            Date d = null;
+            try {
+                d = ((DateFormat) (ISO_DATE_FORMAT.clone())).parse(date_entered);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            this.date_entered = d;
             this.customerId = customerId;
             this.type = type;
             this.tenantId = tenantId;
