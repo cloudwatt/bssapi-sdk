@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +40,6 @@ import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
-import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -104,33 +102,28 @@ public class TestApiGUI {
             super.setVisible(visible);
             if (!isInitialized && visible) {
                 isInitialized = true;
-                Thread t = new Thread("refreshAccountThread") {
+                detailsWidget.setText("Loading...");
+                invoicesWidget.setText("Loading...");
+                ownedTenantsWidget.setText("Loading...");
+                rolesWidget.setText("Loading...");
+                executor.submit(new Runnable() {
 
                     @Override
                     public void run() {
-                        try {
-                            refresh();
-                            SwingUtilities.invokeLater(new Runnable() {
+                        refresh();
+                        SwingUtilities.invokeLater(new Runnable() {
 
-                                @Override
-                                public void run() {
-                                    revalidate();
-                                }
-                            });
-                        } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (TooManyRequestsException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
+                            @Override
+                            public void run() {
+                                revalidate();
+                            }
+                        });
                     }
-                };
-                t.start();
+                });
             }
         }
 
-        public void refresh() throws IOException, TooManyRequestsException {
+        public void refresh() {
             final AccountApi api = account.getApi();
             executor.submit(new Runnable() {
 
