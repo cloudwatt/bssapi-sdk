@@ -14,6 +14,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.spec.exceptions.GenericHorseException;
+import com.cloudwatt.apis.bss.spec.exceptions.HttpUnexpectedError;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -133,7 +134,8 @@ public class WebClient {
      */
     @SuppressWarnings("unchecked")
     public <T> Optional<T> doRequestAndRetrieveResultAsJSON(Class<T> clazz, HttpUriRequest request,
-            Optional<TokenAccess> access) throws IOException, TooManyRequestsException, GenericHorseException {
+            Optional<TokenAccess> access) throws IOException, TooManyRequestsException, GenericHorseException,
+            HttpUnexpectedError {
         // final long start = System.currentTimeMillis();
         try {
             request.setHeader(Constants.HEADER_NAME_ACCEPT, Constants.HEADER_VALUE_APPLICATION_JSON);
@@ -173,12 +175,18 @@ public class WebClient {
                     throw new TooManyRequestsException(request, blockedUntil);
                 } else if (httpCode > 399) {
                     // We try to read Error code !
-                    Optional<GenericHorseException.HorseErrorDescription> value = tryReadJson(GenericHorseException.HorseErrorDescription.class,
-                                                                                              request,
-                                                                                              response);
-                    if (value.isPresent()) {
-                        throw new GenericHorseException(request, value.get());
+                    try {
+                        Optional<GenericHorseException.HorseErrorDescription> value = tryReadJson(GenericHorseException.HorseErrorDescription.class,
+                                                                                                  request,
+                                                                                                  response);
+                        if (value.isPresent()) {
+                            throw new GenericHorseException(request, value.get());
+                        }
+                    } catch (JsonParseException err) {
+                        throw new HttpUnexpectedError(request.getURI(), httpCode, response.getStatusLine()
+                                                                                          .getReasonPhrase());
                     }
+
                 }
 
                 if (clazz.isAssignableFrom(StatusLine.class)) {

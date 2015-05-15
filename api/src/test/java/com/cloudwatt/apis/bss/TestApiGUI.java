@@ -45,6 +45,7 @@ import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
+import com.cloudwatt.apis.bss.spec.exceptions.WrongCredentialsException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -478,10 +479,13 @@ public class TestApiGUI {
                                                     tab.revalidate();
                                                 }
                                             });
-                                        } catch (Exception err) {
-                                            JOptionPane.showMessageDialog(jf,
-                                                                          "Error while connecting: "
-                                                                                  + err.getLocalizedMessage());
+                                        } catch (Throwable err) {
+                                            if (err instanceof WrongCredentialsException)
+                                                JOptionPane.showMessageDialog(jf, err.getLocalizedMessage());
+                                            else
+                                                JOptionPane.showMessageDialog(jf,
+                                                                              "Error while connecting: "
+                                                                                      + err.getLocalizedMessage());
                                         } finally {
                                             setEnabled(true);
                                         }

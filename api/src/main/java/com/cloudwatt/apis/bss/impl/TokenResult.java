@@ -13,7 +13,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import com.cloudwatt.apis.bss.spec.domain.Identity;
+import com.cloudwatt.apis.bss.spec.exceptions.HttpUnexpectedError;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
+import com.cloudwatt.apis.bss.spec.exceptions.WrongCredentialsException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -96,7 +98,7 @@ public class TokenResult {
      * @throws IOException, TooManyRequestsException
      */
     public static Optional<TokenResult> getToken(final WebClient client, String url, final AuthPayload payload)
-            throws IOException, TooManyRequestsException {
+            throws IOException, TooManyRequestsException, WrongCredentialsException, HttpUnexpectedError {
         HttpPost post = new HttpPost(url);
         post.setHeader(Constants.HEADER_NAME_CONTENT_TYPE, Constants.HEADER_VALUE_APPLICATION_JSON);
         post.setHeader(Constants.HEADER_NAME_ACCEPT, Constants.HEADER_VALUE_APPLICATION_JSON);
@@ -107,7 +109,14 @@ public class TokenResult {
         } catch (JsonProcessingException shouldNotHappen) {
             throw new IOException("JSONSerialization issue " + shouldNotHappen.getClass() + ": " + shouldNotHappen.getMessage(), shouldNotHappen); //$NON-NLS-1$//$NON-NLS-2$
         }
-        return client.doRequestAndRetrieveResultAsJSON(TokenResult.class, post, Optional.<TokenAccess> absent());
+        try {
+            return client.doRequestAndRetrieveResultAsJSON(TokenResult.class, post, Optional.<TokenAccess> absent());
+        } catch (HttpUnexpectedError err) {
+            if (err.getHttpCode() == 401)
+                throw new WrongCredentialsException(err);
+            else
+                throw err;
+        }
     }
 
     public static class RolesSet extends HashSet<Role> {

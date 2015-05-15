@@ -16,8 +16,10 @@ import com.cloudwatt.apis.bss.impl.TokenResult;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.impl.WebClient;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
+import com.cloudwatt.apis.bss.spec.exceptions.HttpUnexpectedError;
 import com.cloudwatt.apis.bss.spec.exceptions.IOExceptionLocalized;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
+import com.cloudwatt.apis.bss.spec.exceptions.WrongCredentialsException;
 import com.google.common.base.Optional;
 
 /**
@@ -230,9 +232,12 @@ public class BSSAccountFactory {
          * 
          * @return an object you can play with !
          * @throws IOException if connection cannot be made to APIs
+         * @throws WrongCredentialsException bad credentials
+         * @throws HttpUnexpectedError unexpected HTTP Error
          * @throws TooManyRequestsException If you try to call us too many times, too fast
          */
-        public BSSAccountFactory build() throws IOException, TooManyRequestsException {
+        public BSSAccountFactory build() throws IOException, TooManyRequestsException, WrongCredentialsException,
+                HttpUnexpectedError {
             final String url = buildTokensUrl(keystonePublicEndpoint);
             webClientBuilder.setDefaultHeaders(Collections.singleton(new BasicHeader("User-Agent", userAgent))); //$NON-NLS-1$
             final WebClient client = new WebClient(webClientBuilder.build());
