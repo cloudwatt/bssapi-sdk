@@ -106,11 +106,14 @@ public class BSSAccountFactory {
     private static final class ApiContextImpl implements ApiContext {
 
         /**
-         * Constructor
+         * package protected constructor, please use the Builder instead
          * 
+         * @param keystonePublicEndpoint
          * @param client
          * @param publicApiBase
          * @param tokenAccess
+         * @param email used to refresh tokens
+         * @param password used to refresh tokens
          */
         ApiContextImpl(String keystonePublicEndpoint, WebClient client, String publicApiBase, TokenAccess tokenAccess,
                 String email, String password) {
