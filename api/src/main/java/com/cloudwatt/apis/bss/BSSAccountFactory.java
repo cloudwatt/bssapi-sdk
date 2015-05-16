@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -13,6 +14,7 @@ import com.cloudwatt.apis.bss.impl.ApiContext;
 import com.cloudwatt.apis.bss.impl.BSSHandlerImpl;
 import com.cloudwatt.apis.bss.impl.Constants;
 import com.cloudwatt.apis.bss.impl.TokenResult;
+import com.cloudwatt.apis.bss.impl.TokenResult.AuthPayload;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.impl.WebClient;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
@@ -91,6 +93,16 @@ public class BSSAccountFactory {
         return sb.toString();
     }
 
+    private static TokenResult refreshToken(WebClient client, String url, AuthPayload authPayload) throws IOException,
+            IOExceptionLocalized, TooManyRequestsException {
+        Optional<TokenResult> access = TokenResult.getToken(client, url, authPayload);
+        if (!access.isPresent()) {
+            throw new IOExceptionLocalized("IOExceptionLocalized.couldNotGetTokenFrom404", url); //$NON-NLS-1$
+        } else {
+            return access.get();
+        }
+    }
+
     private static final class ApiContextImpl implements ApiContext {
 
         /**
@@ -101,13 +113,16 @@ public class BSSAccountFactory {
          * @param tokenAccess
          */
         ApiContextImpl(String keystonePublicEndpoint, WebClient client, String publicApiBase, TokenAccess tokenAccess,
-                String password) {
+                String email, String password) {
             this.client = client;
+            this.connectionEmail = email;
             this.publicApiBase = publicApiBase;
             this.tokenAccess = tokenAccess;
             this.keystonePublicEndpoint = keystonePublicEndpoint;
             this.password = password;
         }
+
+        private final String connectionEmail;
 
         private final String keystonePublicEndpoint;
 
@@ -117,7 +132,7 @@ public class BSSAccountFactory {
 
         private final String publicApiBase;
 
-        private TokenAccess tokenAccess;
+        private volatile TokenAccess tokenAccess;
 
         @Override
         public WebClient getWebClient() {
@@ -130,7 +145,15 @@ public class BSSAccountFactory {
         }
 
         @Override
-        public TokenAccess getTokenAccess() throws IOException {
+        public TokenAccess getTokenAccess() throws IOException, TooManyRequestsException, IOExceptionLocalized {
+            if ((new Date(System.currentTimeMillis() + 60000)).after(tokenAccess.getToken().getExpires())) {
+                // OK, we will try to refresh the token
+                final TokenResult access = refreshToken(client,
+                                                        buildTokensUrl(keystonePublicEndpoint),
+                                                        TokenResult.buildCrendentialsPayload(connectionEmail, password));
+                this.tokenAccess = access.getAccess();
+            }
+
             return tokenAccess;
         }
 
@@ -175,7 +198,18 @@ public class BSSAccountFactory {
 
         private String bssApiForceURL = "http://bssapi-prd1.bou.cloudwatt.net/rest/public/";
 
+        /**
+         * Builder Constructor
+         * 
+         * @param email email to use to connect to BSS APIs
+         * @param password the password to use to connect to BSS APIs
+         * @throws IllegalArgumentException if password or email are null or empty
+         */
         public Builder(String email, String password) {
+            if (this.email == null || email.trim().isEmpty())
+                throw new IllegalArgumentException("email cannot be null or empty"); //$NON-NLS-1$
+            if (this.password == null || password.trim().isEmpty())
+                throw new IllegalArgumentException("password cannot be null or empty"); //$NON-NLS-1$
             this.email = email;
             this.password = password;
         }
@@ -241,21 +275,14 @@ public class BSSAccountFactory {
             final String url = buildTokensUrl(keystonePublicEndpoint);
             webClientBuilder.setDefaultHeaders(Collections.singleton(new BasicHeader("User-Agent", userAgent))); //$NON-NLS-1$
             final WebClient client = new WebClient(webClientBuilder.build());
-            final Optional<TokenResult> access = TokenResult.getToken(client,
-                                                                      url,
-                                                                      TokenResult.buildCrendentialsPayload(email,
-                                                                                                           password));
-
-            if (!access.isPresent()) {
-                throw new IOExceptionLocalized("IOExceptionLocalized.couldNotGetTokenFrom404", url); //$NON-NLS-1$
-            }
+            final TokenResult access = refreshToken(client, url, TokenResult.buildCrendentialsPayload(email, password));
 
             return new BSSAccountFactory(client,
                                          keystonePublicEndpoint,
                                          bssApiForceURL,
                                          email,
                                          password,
-                                         access.get().getAccess());
+                                         access.getAccess());
         }
     }
 
@@ -263,7 +290,7 @@ public class BSSAccountFactory {
 
     private BSSAccountFactory(final WebClient client, final String keystonePublicEndpoint, final String bssApi,
             final String email, final String password, final TokenAccess access) {
-        this.context = new ApiContextImpl(keystonePublicEndpoint, client, bssApi, access, password);
+        this.context = new ApiContextImpl(keystonePublicEndpoint, client, bssApi, access, email, password);
     }
 
     /**
