@@ -33,11 +33,16 @@ import com.google.common.base.Optional;
  */
 public class AccountInformationWidget extends JPanel {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4357856524523001745L;
+
     private final AccountWithRolesWithOperations account;
 
     private final ExecutorService executor;
 
-    private final static String TEXT_HTML = "text/html";
+    private final static String TEXT_HTML = "text/html"; //$NON-NLS-1$
 
     private static String errorMessageToHTML(String type, String msg) {
         return "<html><div><b>" + type + "</b>:</div><pre>" + msg + "</pre></html>";
