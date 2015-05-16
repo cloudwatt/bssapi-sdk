@@ -95,6 +95,7 @@ public class AccountDetailsImpl implements AccountDetails {
         return billing_address_street;
     }
 
+    @Override
     public String getBillingAddressPostCode() {
         return billing_address_postalcode;
     }

@@ -91,6 +91,18 @@ class SerialDetails {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
     }
 
+    private static final Date parseIsoDate(String date) {
+        try {
+            return ((DateFormat) (ISO_DATE_FORMAT.clone())).parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class OwnedTenantImpl implements OwnedTenant {
 
@@ -128,13 +140,7 @@ class SerialDetails {
                 @JsonProperty(value = "type", required = false) String type,
                 @JsonProperty(value = "tenantId", required = true) String tenantId) {
             super();
-            Date d = null;
-            try {
-                d = ((DateFormat) (ISO_DATE_FORMAT.clone())).parse(date_entered);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            this.date_entered = d;
+            this.date_entered = parseIsoDate(date_entered);
             this.customerId = customerId;
             this.type = type;
             this.tenantId = tenantId;
@@ -199,17 +205,17 @@ class SerialDetails {
     public static class InvoiceImpl implements Invoice {
 
         @JsonCreator
-        public InvoiceImpl(@JsonProperty(value = "id", required = false) int id,
-                @JsonProperty(value = "create_date", required = false) Date create_date,
-                @JsonProperty(value = "due_date", required = false) Date due_date,
-                @JsonProperty(value = "total", required = false) double total,
+        public InvoiceImpl(@JsonProperty(value = "id", required = true) int id,
+                @JsonProperty(value = "createDate", required = false) Date createDate,
+                @JsonProperty(value = "dueDate", required = false) Date dueDate,
+                @JsonProperty(value = "total", required = true) double total,
                 @JsonProperty(value = "balance", required = false) double balance,
                 @JsonProperty(value = "invoicesURI") Map<String, URI> invoicesURI,
                 @JsonProperty(value = "payments") Iterable<PaymentImpl> payments) {
             super();
             this.id = id;
-            this.create_date = create_date;
-            this.due_date = due_date;
+            this.create_date = createDate;
+            this.due_date = dueDate;
             this.total = total;
             this.balance = balance;
             this.invoicesURI = ImmutableMap.<String, URI> copyOf(invoicesURI);

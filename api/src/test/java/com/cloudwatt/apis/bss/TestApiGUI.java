@@ -3,13 +3,9 @@ package com.cloudwatt.apis.bss;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -26,282 +22,20 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.table.AbstractTableModel;
-import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
-import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
-import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
-import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
-import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
-import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
+import com.cloudwatt.apis.bss.gui.AccountInformationWidget;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
-import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
-import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
-import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.WrongCredentialsException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class TestApiGUI {
-
-    private static class AccountFrame extends JPanel {
-
-        private final AccountWithRolesWithOperations account;
-
-        private final ExecutorService executor;
-
-        public AccountFrame(ExecutorService executor, AccountWithRolesWithOperations account) {
-            super(new GridBagLayout());
-            this.executor = executor;
-            this.account = account;
-            GridBagConstraints c = new GridBagConstraints();
-            c.gridx = 0;
-            c.gridy = 0;
-            c.ipady = 5;
-            c.ipadx = 5;
-            c.weighty = 1;
-            c.weighty = 2;
-            c.anchor = GridBagConstraints.EAST;
-            c.gridwidth = 1;
-            add(new JLabel("Details: "), c);
-            c.gridy++;
-            add(new JLabel("Roles: "), c);
-            c.gridy++;
-            add(new JLabel("Owned Tenants: "), c);
-            c.gridy++;
-            add(new JLabel("Invoices: "), c);
-            c.gridy++;
-            c.gridy = 0;
-            c.gridx = 1;
-            c.gridwidth = 2;
-            c.weightx = 2;
-            c.anchor = GridBagConstraints.CENTER;
-            c.fill = GridBagConstraints.HORIZONTAL;
-            add(detailsWidget, c);
-            c.gridy++;
-            add(rolesWidget, c);
-            c.gridy++;
-            add(ownedTenantsWidget, c);
-            c.gridy++;
-            add(invoicesWidget, c);
-        }
-
-        private final JTextArea detailsWidget = new JTextArea("Details are not Available");
-
-        private final JTextArea rolesWidget = new JTextArea("Roles are not Available");
-
-        private final JTextArea ownedTenantsWidget = new JTextArea("Owned Tenants are not Available");
-
-        private final JTextArea invoicesWidget = new JTextArea("Invoices are not Available");
-
-        public boolean isInitialized = false;
-
-        @Override
-        public void setVisible(boolean visible) {
-            super.setVisible(visible);
-            if (!isInitialized && visible) {
-                isInitialized = true;
-                detailsWidget.setText("Loading...");
-                invoicesWidget.setText("Loading...");
-                ownedTenantsWidget.setText("Loading...");
-                rolesWidget.setText("Loading...");
-                executor.submit(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        refresh();
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                revalidate();
-                            }
-                        });
-                    }
-                });
-            }
-        }
-
-        public void refresh() {
-            final AccountApi api = account.getApi();
-            executor.submit(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        final Optional<AccountDetailApi> detailsApi = api.getAccountDetails();
-                        // We check if we have the right to look at the details
-                        if (detailsApi.isPresent()) {
-                            final AccountDetails account = detailsApi.get().get();
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    detailsWidget.setText("+ Account details: " + account.getName() + "\n"
-                                                          + account.getBillingAddress() + "\ncity="
-                                                          + account.getBillingCity());
-                                }
-                            });
-
-                        } else {
-                            // Ooops, we cannot see the details, we don't have the rights to
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    detailsWidget.setText("- Account details not available");
-                                }
-                            });
-                        }
-                    } catch (final Exception err) {
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                detailsWidget.setText("Failed to get account details: " + err.getMessage());
-                            }
-                        });
-                    }
-                }
-            });
-            executor.submit(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        Optional<AccountRolesListApi> rolesApi = api.getRolesListApi();
-                        if (rolesApi.isPresent()) {
-                            final StringBuilder sb = new StringBuilder();
-                            for (IdentityToAccountRole id : rolesApi.get().get()) {
-                                sb.append(id.getUserName() + " (" + id.getUserEmail() + ") has roles "
-                                          + id.getUsageType()).append("\n");
-                            }
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    rolesWidget.setText(sb.toString());
-                                }
-                            });
-                        } else {
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    rolesWidget.setText("- Account roles not available");
-                                }
-                            });
-                        }
-                    } catch (final Exception err) {
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                rolesWidget.setText("Failed to get account roles: " + err.getMessage());
-                            }
-                        });
-                    }
-
-                }
-            });
-            executor.submit(new Runnable() {
-
-                @Override
-                public void run() {
-                    // List the tenants owned by account
-                    try {
-                        Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
-                        if (myApi.isPresent()) {
-                            final StringBuilder sb = new StringBuilder();
-                            for (OwnedTenant id : myApi.get().get()) {
-
-                                sb.append(id.getTenantId() + " (" + id.getTenantType() + ") created the "
-                                          + id.getCreationTime()).append("\n");
-                            }
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    ownedTenantsWidget.setText(sb.toString());
-                                }
-                            });
-                        } else {
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    ownedTenantsWidget.setText("- Tenants owned not available");
-
-                                }
-                            });
-                        }
-                    } catch (final Exception err) {
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                ownedTenantsWidget.setText("Failed to get the tenants owned: " + err.getMessage());
-                            }
-                        });
-                    }
-
-                }
-            });
-            executor.submit(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
-                        if (myApi.isPresent()) {
-                            final StringBuilder sb = new StringBuilder();
-                            for (Invoice invoice : myApi.get().getInvoices()) {
-                                sb.append(invoice.getId() + " (" + invoice.getTotalInEuros() + "EUR) created the "
-                                          + invoice.getCreateDate() + "\n");
-                                for (Map.Entry<String, URI> en : invoice.getInvoicesURI().entrySet()) {
-                                    sb.append("   - " + en.getKey() + ": " + en.getValue().toASCIIString())
-                                      .append("\n");
-                                }
-                                sb.append("----\n");
-                                SwingUtilities.invokeLater(new Runnable() {
-
-                                    @Override
-                                    public void run() {
-                                        invoicesWidget.setText(sb.toString());
-                                    }
-                                });
-                            }
-                        } else {
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    invoicesWidget.setText("- Invoice API is not available");
-                                }
-                            });
-                        }
-                    } catch (final Exception err) {
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                invoicesWidget.setText("Failed to get the invoices: " + err.getMessage());
-                            }
-                        });
-                    }
-
-                }
-            });
-
-        }
-    }
 
     /**
      * Load environment variable
@@ -342,6 +76,7 @@ public class TestApiGUI {
                     }
                 });
                 JPanel contactPanel = new JPanel(new BorderLayout(5, 5));
+                final JLabel status = new JLabel("xxx", JLabel.TRAILING);
                 {
                     JPanel connectPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 5));
                     contactPanel.add(connectPanel, BorderLayout.NORTH);
@@ -353,22 +88,46 @@ public class TestApiGUI {
                     connectPanel.add(passwordF);
                     final Action connect = new AbstractAction() {
 
-                        private boolean connected = false;
+                        private volatile boolean connected = false;
+
+                        private void updateGUI() {
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    putValue(Action.NAME, connected ? "Disconnect" : "Connect");
+                                    status.setText(connected ? "Connected" : "Not Connected");
+                                    userF.setEnabled(!connected);
+                                    passwordF.setEnabled(!connected);
+                                }
+                            });
+
+                        }
+
                         {
-                            putValue(Action.NAME, "Connect");
+                            updateGUI();
                         }
 
                         @Override
                         public void actionPerformed(ActionEvent e) {
+
                             if (connected) {
                                 connected = false;
-                                putValue(Action.NAME, "Connect to API");
+                                updateGUI();
+
                                 while (tab.getTabCount() > 1) {
                                     tab.removeTabAt(1);
                                 }
                                 tab.revalidate();
                             } else {
                                 setEnabled(false);
+                                SwingUtilities.invokeLater(new Runnable() {
+
+                                    @Override
+                                    public void run() {
+                                        status.setText("Connecting to APIs...");
+                                    }
+                                });
                                 executor.execute(new Runnable() {
 
                                     @Override
@@ -381,7 +140,6 @@ public class TestApiGUI {
 
                                             final BSSApiHandle mainApi = factory.getHandle();
                                             connected = true;
-                                            putValue(Action.NAME, "Disconnect");
                                             System.out.println("Connected as " + mainApi.getIdentity().getEmail()
                                                                + ", name=" + mainApi.getIdentity().getName() + ", id="
                                                                + mainApi.getIdentity().getId() + "\n");
@@ -474,7 +232,7 @@ public class TestApiGUI {
 
                                                     for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
                                                         tab.add(a.getCustomerId() + "roles=" + a.getNamedRoles(),
-                                                                new AccountFrame(executor, a));
+                                                                new AccountInformationWidget(executor, a));
                                                     }
                                                     tab.revalidate();
                                                 }
@@ -487,7 +245,14 @@ public class TestApiGUI {
                                                                               "Error while connecting: "
                                                                                       + err.getLocalizedMessage());
                                         } finally {
-                                            setEnabled(true);
+                                            SwingUtilities.invokeLater(new Runnable() {
+
+                                                @Override
+                                                public void run() {
+                                                    updateGUI();
+                                                    setEnabled(true);
+                                                }
+                                            });
                                         }
                                     }
                                 });
@@ -498,7 +263,8 @@ public class TestApiGUI {
                     };
                     // South
                     {
-                        JPanel south = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 5));
+                        JPanel south = new JPanel(new FlowLayout(FlowLayout.TRAILING, 20, 5));
+                        south.add(status);
                         south.add(new JButton(connect));
                         contactPanel.add(south, BorderLayout.SOUTH);
 

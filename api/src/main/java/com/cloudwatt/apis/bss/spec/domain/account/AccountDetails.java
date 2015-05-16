@@ -12,6 +12,8 @@ public interface AccountDetails extends Account {
 
     public String getBillingCity();
 
+    public String getBillingAddressPostCode();
+
     public String getBillingCountry();
 
 }
