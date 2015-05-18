@@ -231,8 +231,8 @@ public class TestApiGUI {
                                                     });
 
                                                     for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
-                                                        tab.add(a.getCustomerId() + "roles=" + a.getNamedRoles(),
-                                                                new AccountInformationWidget(executor, a));
+                                                        tab.addTab(a.getCustomerId() + " " + a.getNamedRoles(),
+                                                                   new AccountInformationWidget(executor, a));
                                                     }
                                                     tab.revalidate();
                                                 }
