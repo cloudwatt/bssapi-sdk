@@ -209,9 +209,9 @@ public class BSSAccountFactory {
          * @throws IllegalArgumentException if password or email are null or empty
          */
         public Builder(String email, String password) {
-            if (this.email == null || email.trim().isEmpty())
+            if (email == null || email.trim().isEmpty())
                 throw new IllegalArgumentException("email cannot be null or empty"); //$NON-NLS-1$
-            if (this.password == null || password.trim().isEmpty())
+            if (password == null || password.trim().isEmpty())
                 throw new IllegalArgumentException("password cannot be null or empty"); //$NON-NLS-1$
             this.email = email;
             this.password = password;
