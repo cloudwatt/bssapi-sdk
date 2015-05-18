@@ -11,7 +11,6 @@ import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.ListOfInvoicesImpl;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
-import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi.InvoiceExtension;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;

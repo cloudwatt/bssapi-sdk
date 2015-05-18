@@ -88,6 +88,11 @@ public class TestApiGUI {
                     connectPanel.add(passwordF);
                     final Action connect = new AbstractAction() {
 
+                        /**
+                         * 
+                         */
+                        private static final long serialVersionUID = 1448831485136149625L;
+
                         private volatile boolean connected = false;
 
                         private void updateGUI() {
@@ -162,6 +167,11 @@ public class TestApiGUI {
                                                                     tenants = builder.build();
                                                                 }
                                                                 final AbstractTableModel model = new AbstractTableModel() {
+
+                                                                    /**
+                                                                     * 
+                                                                     */
+                                                                    private static final long serialVersionUID = -6502459171631045831L;
 
                                                                     @Override
                                                                     public String getColumnName(int column) {

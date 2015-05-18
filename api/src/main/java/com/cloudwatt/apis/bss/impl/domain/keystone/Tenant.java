@@ -31,18 +31,22 @@ public class Tenant implements TenantIFace {
         this.enabled = enabled == null || enabled.booleanValue();
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public String getDescription() {
         return description;
     }
 
+    @Override
     public boolean isEnabled() {
         return enabled;
     }
