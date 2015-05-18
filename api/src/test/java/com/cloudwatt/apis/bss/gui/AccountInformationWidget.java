@@ -16,6 +16,7 @@ import javax.swing.event.HyperlinkListener;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
+import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi.InvoiceExtension;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
@@ -292,7 +293,7 @@ public class AccountInformationWidget extends JPanel {
                     Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
                     if (myApi.isPresent()) {
                         final StringBuilder sb = new StringBuilder("<html><ol>");
-                        for (Invoice invoice : myApi.get().getInvoices()) {
+                        for (Invoice invoice : myApi.get().get().setExtensions(InvoiceExtension.pdf).get()) {
                             sb.append("<li>Invoice number ")
                               .append(invoice.getId())
                               .append(" of ")

@@ -8,6 +8,7 @@ import java.util.Map;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
+import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi.InvoiceExtension;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
@@ -154,7 +155,10 @@ public class TestAPI {
                         Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
                         if (myApi.isPresent()) {
                             System.out.println("+ Listing of Invoices");
-                            for (Invoice invoice : myApi.get().getInvoices()) {
+                            for (Invoice invoice : myApi.get()
+                                                        .get()
+                                                        .setExtensions(InvoiceExtension.pdf, InvoiceExtension.csv)
+                                                        .get()) {
                                 System.out.print("\t" + invoice.getId() + " (" + invoice.getTotalInEuros()
                                                  + "EUR) created the " + invoice.getCreateDate() + ", URLs: [");
                                 for (Map.Entry<String, URI> en : invoice.getInvoicesURI().entrySet()) {
