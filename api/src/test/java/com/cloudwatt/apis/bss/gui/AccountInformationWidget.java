@@ -66,8 +66,7 @@ public class AccountInformationWidget extends JPanel {
         c.gridy = 0;
         c.ipady = 5;
         c.ipadx = 5;
-        c.weighty = 1;
-        c.weighty = 2;
+        c.weighty = 1f;
         c.anchor = GridBagConstraints.EAST;
         c.gridwidth = 1;
         add(new JLabel("Details: "), c);
@@ -77,11 +76,11 @@ public class AccountInformationWidget extends JPanel {
         add(new JLabel("Owned Tenants: "), c);
         c.gridy++;
         add(new JLabel("Invoices: "), c);
-        c.gridy++;
+
         c.gridy = 0;
         c.gridx = 1;
         c.gridwidth = 2;
-        c.weightx = 2;
+        c.weightx = 2f;
         c.anchor = GridBagConstraints.CENTER;
         c.fill = GridBagConstraints.HORIZONTAL;
         add(detailsWidget, c);
