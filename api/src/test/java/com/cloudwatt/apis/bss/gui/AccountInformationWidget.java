@@ -297,13 +297,13 @@ public class AccountInformationWidget extends JPanel {
                               .append(invoice.getId())
                               .append(" of ")
                               .append(invoice.getTotalInEuros())
-                              .append("&euro; the " + invoice.getCreateDate() + " ");
+                              .append("&euro; the " + invoice.getCreateDate() + " Download ");
                             for (Map.Entry<String, URI> en : invoice.getInvoicesURI().entrySet()) {
-                                sb.append(" Download as <a href=\"")
+                                sb.append(" <a href=\"")
                                   .append(en.getValue().toASCIIString())
-                                  .append("\">")
+                                  .append("\">as ")
                                   .append(en.getKey())
-                                  .append("</a>");
+                                  .append("</a>...");
                             }
                             sb.append("</li>");
                         }

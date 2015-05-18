@@ -21,6 +21,7 @@ import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 public class AccountApiImpl implements AccountApi {
 
@@ -100,7 +101,8 @@ public class AccountApiImpl implements AccountApi {
                 return context.getWebClient()
                               .doRequestAndRetrieveResultAsJSON(ListOfInvoicesImpl.class,
                                                                 new HttpGet(context.buildPublicApiUrl(String.format("bss/1/accounts/%s/listInvoices", account.getCustomerId()), //$NON-NLS-1$
-                                                                                                      Collections.<String, String> emptyMap())),
+                                                                                                      ImmutableMap.<String, String> of("extensions",
+                                                                                                                                       "pdf,csv"))),
                                                                 Optional.<TokenAccess> of(context.getTokenAccess()))
                               .get()
                               .getInvoices();
