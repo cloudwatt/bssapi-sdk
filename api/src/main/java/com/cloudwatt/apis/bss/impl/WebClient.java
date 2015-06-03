@@ -168,9 +168,7 @@ public class WebClient {
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
-                        System.out.println(new ObjectMapper().writer()
-                                                             .withDefaultPrettyPrinter()
-                                                             .writeValueAsString(value.get()));
+
                     }
                     throw new TooManyRequestsException(request, blockedUntil);
                 } else if (httpCode > 399) {
