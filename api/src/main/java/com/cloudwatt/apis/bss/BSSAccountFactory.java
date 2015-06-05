@@ -199,7 +199,7 @@ public class BSSAccountFactory {
         private String userAgent = System.getProperty("cwapi-ua", //$NON-NLS-1$
                                                       "horse-client/" + getClientApiVersion()); //$NON-NLS-1$
 
-        private String bssApiForceURL = "http://bssapi-prd1.bou.cloudwatt.net/rest/public/";
+        private String bssApiForceURL = "https://bssapi.fr1.cloudwatt.com";
 
         /**
          * Builder Constructor
