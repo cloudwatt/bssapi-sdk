@@ -20,7 +20,7 @@ mvn package javadoc:jar
 Using it
 --------
 
-The directory [src/test/java/com/cloudwatt/apis/bss/](./src/test/java/com/cloudwatt/apis/bss/TestAPI.java) contains all in one file examples about how to use the SDK:
+The directory [src/test/java/com/cloudwatt/apis/bss/](./src/test/java/com/cloudwatt/apis/bss/) contains all in one file examples about how to use the SDK:
 
 - Simple text client: [TestApi.java](./src/test/java/com/cloudwatt/apis/bss/TestAPI.java) to show you to use easily the API.
 )
