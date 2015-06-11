@@ -19,4 +19,9 @@ mvn package javadoc:jar
 Using it
 --------
 
-Have a look at the example file [TestApi.java file](./src/test/java/com/cloudwatt/apis/bss/TestAPI.java) to show you to use easily the API.
+The directory [src/test/java/com/cloudwatt/apis/bss/](./src/test/java/com/cloudwatt/apis/bss/TestAPI.java) contains examples about how to use the SDK:
+
+# Simple text client: [TestApi.java](./src/test/java/com/cloudwatt/apis/bss/TestAPI.java) to show you to use easily the API.
+# Basic Swing GUI Client: [TestApiGUI.java](./src/test/java/com/cloudwatt/apis/bss/TestApiGUI.java) - a very simple GUI to display your BSS Cloudwatt informations
+
+Launch those tests with your Cloudwatt credentials
