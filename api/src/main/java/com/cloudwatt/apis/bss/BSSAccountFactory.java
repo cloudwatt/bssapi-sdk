@@ -190,7 +190,7 @@ public class BSSAccountFactory {
      */
     public static class Builder {
 
-        private String keystonePublicEndpoint = "https://identity.fr1.cloudwatt.com/v2.0";
+        private String keystonePublicEndpoint = "https://identity.fr1.cloudwatt.com/v2.0"; //$NON-NLS-1$
 
         private final String email;
 
@@ -199,7 +199,7 @@ public class BSSAccountFactory {
         private String userAgent = System.getProperty("cwapi-ua", //$NON-NLS-1$
                                                       "horse-client/" + getClientApiVersion()); //$NON-NLS-1$
 
-        private String bssApiForceURL = "https://bssapi.fr1.cloudwatt.com";
+        private String bssApiForceURL = "https://bssapi.fr1.cloudwatt.com"; //$NON-NLS-1$
 
         /**
          * Builder Constructor

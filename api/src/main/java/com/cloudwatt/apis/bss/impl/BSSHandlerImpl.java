@@ -117,13 +117,13 @@ public class BSSHandlerImpl implements BSSApiHandle {
 
     @Override
     public Iterable<TenantIFace> getTenantsList() throws IOException, TooManyRequestsException {
-        final String url = context.buildKeystoneUrl("tenants");
+        final String url = context.buildKeystoneUrl("tenants"); //$NON-NLS-1$
         Optional<TenantsResult> res = context.getWebClient()
                                              .doRequestAndRetrieveResultAsJSON(TenantsResult.class,
                                                                                new HttpGet(url),
                                                                                Optional.of(context.getTokenAccess()));
         if (!res.isPresent()) {
-            throw new IOException("HTTP 404 for " + url);
+            throw new IOException("HTTP 404 for " + url); //$NON-NLS-1$
         } else {
             return res.get().getTenants();
         }
