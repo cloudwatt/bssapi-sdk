@@ -5,9 +5,10 @@ Overview
 --------
 
 This API is intended for users that would like to use advanced Cloudwatt features including :
-# Automatic Provisioning of accounts and tenants
-# Get Invoice informations
-# Get consumption in real time...
+
+- Automatic Provisioning of accounts and tenants
+- Get Invoice informations
+- Get consumption in real time...
 
 Build
 -----
@@ -19,4 +20,10 @@ mvn package javadoc:jar
 Using it
 --------
 
-Have a look at the example file [TestApi.java file](./src/test/java/com/cloudwatt/apis/bss/TestAPI.java) to show you to use easily the API.
+The directory [src/test/java/com/cloudwatt/apis/bss/](./src/test/java/com/cloudwatt/apis/bss/) contains all in one file examples about how to use the SDK:
+
+- Simple text client: [TestApi.java](./src/test/java/com/cloudwatt/apis/bss/TestAPI.java) to show you to use easily the API.
+)
+- Basic Swing GUI Client: [TestApiGUI.java](./src/test/java/com/cloudwatt/apis/bss/TestApiGUI.java) - a very simple GUI to display your BSS Cloudwatt informations
+
+Launch those tests with your Cloudwatt credentials.
