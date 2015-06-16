@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Optional;
@@ -180,10 +181,13 @@ public class WebClient {
                         if (value.isPresent()) {
                             throw new GenericHorseException(request, value.get());
                         }
-                    } catch (JsonParseException err) {
-                        throw new HttpUnexpectedError(request.getURI(), httpCode, response.getStatusLine()
-                                                                                          .getReasonPhrase());
+                    } catch (JsonParseException ignored) {
+                        // We go to next Exception thrown
+                    } catch (JsonMappingException ignored) {
+                        // Same, we are unexpected
                     }
+                    throw new HttpUnexpectedError(request.getURI(), httpCode, response.getStatusLine()
+                                                                                      .getReasonPhrase());
 
                 }
 
