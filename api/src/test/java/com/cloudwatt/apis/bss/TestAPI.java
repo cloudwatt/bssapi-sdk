@@ -10,14 +10,17 @@ import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi.InvoiceExtension;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
+import com.cloudwatt.apis.bss.spec.accountapi.ConsumptionApi;
+import com.cloudwatt.apis.bss.spec.accountapi.ConsumptionApi.ConsumptionApiBuilder;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
-import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
+import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
+import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEvent;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
@@ -136,7 +139,7 @@ public class TestAPI {
                         Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
                         if (myApi.isPresent()) {
                             System.out.println("+ Listing of Tenants owned");
-                            for (OwnedTenant id : myApi.get().get()) {
+                            for (OwnedTenantWithApi id : myApi.get().get()) {
                                 System.out.print("\t" + id.getTenantId() + " (" + id.getTenantType() + ") created the "
                                                  + id.getCreationTime());
                                 TenantIFace ta = idTenants.get(id.getTenantId());
@@ -145,6 +148,15 @@ public class TestAPI {
                                                        + ta.isEnabled());
                                 } else {
                                     System.out.println("\t No access");
+                                }
+                                if (id.getConsumptionApi().isPresent()) {
+                                    System.out.println("\t Consumption for " + id.getTenantId());
+                                    final ConsumptionApi consumeApi = id.getConsumptionApi().get();
+                                    final ConsumptionApiBuilder builder = consumeApi.get();
+                                    final Iterable<? extends HourlyEvent> events = builder.get();
+                                    for (HourlyEvent h : events) {
+                                        System.out.println("\t\t" + h.toString());
+                                    }
                                 }
                             }
                         } else {

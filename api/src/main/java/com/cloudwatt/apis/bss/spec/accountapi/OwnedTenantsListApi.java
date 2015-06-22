@@ -1,7 +1,7 @@
 package com.cloudwatt.apis.bss.spec.accountapi;
 
 import java.io.IOException;
-import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
+import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 
 /**
@@ -17,6 +17,6 @@ public interface OwnedTenantsListApi {
      * 
      * @return a not null list of tenants
      */
-    public Iterable<OwnedTenant> get() throws IOException, TooManyRequestsException;
+    public Iterable<OwnedTenantWithApi> get() throws IOException, TooManyRequestsException;
 
 }

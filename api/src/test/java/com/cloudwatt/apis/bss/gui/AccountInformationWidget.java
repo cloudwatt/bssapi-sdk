@@ -1,18 +1,28 @@
 package com.cloudwatt.apis.bss.gui;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountInvoicesApi;
@@ -22,7 +32,7 @@ import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
-import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
+import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.google.common.base.Optional;
 
@@ -32,6 +42,7 @@ import com.google.common.base.Optional;
  * @author pierre souchay
  *
  */
+@SuppressWarnings("nls")
 public class AccountInformationWidget extends JPanel {
 
     /**
@@ -96,7 +107,13 @@ public class AccountInformationWidget extends JPanel {
 
     private final JEditorPane rolesWidget = new JEditorPane(TEXT_HTML, notAvailable());
 
-    private final JEditorPane ownedTenantsWidget = new JEditorPane(TEXT_HTML, notAvailable());
+    private final JEditorPane ownedTenantsWidgetText = new JEditorPane(TEXT_HTML, notAvailable());
+
+    private final JPanel ownedTenantsWidget = new JPanel(new BorderLayout());
+
+    {
+        ownedTenantsWidget.add(ownedTenantsWidgetText, BorderLayout.CENTER);
+    }
 
     private final JEditorPane invoicesWidget = new JEditorPane(TEXT_HTML, notAvailable());
 
@@ -122,7 +139,7 @@ public class AccountInformationWidget extends JPanel {
                         }
                     }
                 };
-                for (JEditorPane ed : new JEditorPane[] { detailsWidget, rolesWidget, ownedTenantsWidget,
+                for (JEditorPane ed : new JEditorPane[] { detailsWidget, rolesWidget, ownedTenantsWidgetText,
                                                          invoicesWidget }) {
                     ed.setText(loading());
                     ed.setEditable(false);
@@ -244,21 +261,103 @@ public class AccountInformationWidget extends JPanel {
             public void run() {
                 // List the tenants owned by account
                 try {
-                    Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
+                    final Optional<OwnedTenantsListApi> myApi = api.getOwnedTenantsApi();
                     if (myApi.isPresent()) {
-                        final StringBuilder sb = new StringBuilder("<html><ol>");
-                        for (OwnedTenant id : myApi.get().get()) {
-                            sb.append("<li>Tenant <i>")
-                              .append(id.getTenantId() + "</i> of type <b>" + id.getTenantType() + "</b> created the "
-                                      + id.getCreationTime())
-                              .append("</li>");
+                        final List<OwnedTenantWithApi> tenants = new ArrayList<OwnedTenantWithApi>();
+                        for (OwnedTenantWithApi id : myApi.get().get()) {
+                            tenants.add(id);
                         }
-                        sb.append("</ol></html>");
+
+                        final AbstractTableModel model = new AbstractTableModel() {
+
+                            /**
+                             * 
+                             */
+                            private static final long serialVersionUID = -2774483270266701078L;
+
+                            @Override
+                            public String getColumnName(int column) {
+                                switch (column) {
+                                    case 0:
+                                        return "id";
+                                    case 1:
+                                        return "type";
+                                    case 2:
+                                        return "creation Time";
+                                    default:
+                                        return null;
+                                }
+                            }
+
+                            @Override
+                            public Class<?> getColumnClass(int columnIndex) {
+                                switch (columnIndex) {
+                                    case 0:
+                                        return String.class;
+                                    case 1:
+                                        return String.class;
+                                    case 2:
+                                        return Date.class;
+                                    default:
+                                        return null;
+                                }
+                            }
+
+                            @Override
+                            public Object getValueAt(int rowIndex, int columnIndex) {
+                                final OwnedTenantWithApi ow = tenants.get(rowIndex);
+                                switch (columnIndex) {
+                                    case 0:
+                                        return ow.getTenantId();
+                                    case 1:
+                                        return ow.getTenantType();
+                                    case 2:
+                                        return ow.getCreationTime();
+                                    default:
+                                        return null;
+                                }
+
+                            }
+
+                            @Override
+                            public int getRowCount() {
+                                return tenants.size();
+                            }
+
+                            @Override
+                            public int getColumnCount() {
+                                return 3;
+                            }
+                        };
+
                         SwingUtilities.invokeLater(new Runnable() {
 
                             @Override
                             public void run() {
-                                ownedTenantsWidget.setText(sb.toString());
+                                ownedTenantsWidget.removeAll();
+                                JTable table = new JTable(model);
+                                table.setDefaultRenderer(OwnedTenantWithApi.class, new TableCellRenderer() {
+
+                                    private final JButton button = new JButton("consumption");
+
+                                    @Override
+                                    public Component getTableCellRendererComponent(JTable table, Object value,
+                                            boolean isSelected, boolean hasFocus, int row, int column) {
+                                        OwnedTenantWithApi ow = (OwnedTenantWithApi) value;
+                                        button.setEnabled(ow.getConsumptionApi().isPresent());
+                                        return button;
+                                    }
+                                });
+                                JTabbedPane jt = new JTabbedPane();
+                                jt.addTab("OwnedTenants", table);
+                                for (OwnedTenantWithApi id : tenants) {
+                                    if (id.getConsumptionApi().isPresent()) {
+                                        jt.add("Consumption " + id.getTenantId(),
+                                               new ConsumptionPanel(id.getConsumptionApi().get()));
+                                    }
+                                }
+                                ownedTenantsWidget.add(jt, BorderLayout.CENTER);
+                                ownedTenantsWidget.revalidate();
                             }
                         });
                     } else {
@@ -266,7 +365,7 @@ public class AccountInformationWidget extends JPanel {
 
                             @Override
                             public void run() {
-                                ownedTenantsWidget.setText(notAvailable());
+                                ownedTenantsWidgetText.setText(notAvailable());
 
                             }
                         });
@@ -276,8 +375,8 @@ public class AccountInformationWidget extends JPanel {
 
                         @Override
                         public void run() {
-                            ownedTenantsWidget.setText(errorMessageToHTML("Failed to get the tenants owned",
-                                                                          err.getLocalizedMessage()));
+                            ownedTenantsWidgetText.setText(errorMessageToHTML("Failed to get the tenants owned",
+                                                                              err.getLocalizedMessage()));
                         }
                     });
                 }

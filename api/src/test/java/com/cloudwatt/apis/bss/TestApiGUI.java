@@ -35,6 +35,7 @@ import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.WrongCredentialsException;
 import com.google.common.collect.ImmutableList;
 
+@SuppressWarnings("nls")
 public class TestApiGUI {
 
     /**

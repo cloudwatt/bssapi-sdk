@@ -1,5 +1,6 @@
 package com.cloudwatt.apis.bss.spec.accountapi;
 
+import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.google.common.base.Optional;
 
 /**
@@ -37,5 +38,12 @@ public interface AccountApi {
      * @return {@link Optional#absent()} if not available, the Api otherwise
      */
     public Optional<AccountInvoicesApi> getInvoicesApi();
+
+    /**
+     * Get the Consumption API if available
+     * 
+     * @return {@link Optional#absent()} if not available, the API otherwise
+     */
+    public Optional<ConsumptionApi> getConsumptionApi(OwnedTenant tenant);
 
 }

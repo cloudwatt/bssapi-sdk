@@ -24,6 +24,10 @@ public interface BSSCap {
          */
         BILLING_INVOICES,
         /**
+         * Show RAW Consumption
+         */
+        CONSUMPTION,
+        /**
          * Show all the Users and their roles having access to the account
          */
         ACCOUNT_ROLES_LIST,
