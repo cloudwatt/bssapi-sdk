@@ -9,7 +9,7 @@ import com.cloudwatt.apis.bss.spec.domain.consumption.TypedHourlyEvent;
  * @author pierre souchay
  *
  */
-public interface HourlySwiftOutgoingBytes extends TypedHourlyEvent, SizeInBytes {
+public interface HourObjectOutgoingBytesOpenstackAggregatedMetricEvent extends TypedHourlyEvent, SizeInBytes {
 
     /**
      * Get the number of requests

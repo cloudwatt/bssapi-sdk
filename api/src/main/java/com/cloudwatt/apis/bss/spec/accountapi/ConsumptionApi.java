@@ -1,7 +1,7 @@
 package com.cloudwatt.apis.bss.spec.accountapi;
 
 import java.io.IOException;
-import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEventBase;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 
 public interface ConsumptionApi {
@@ -19,7 +19,7 @@ public interface ConsumptionApi {
          * 
          * @return all the nodes of Consumption
          */
-        public Iterable<? extends HourlyEvent> get() throws IOException, TooManyRequestsException;
+        public Iterable<? extends HourlyEventBase> get() throws IOException, TooManyRequestsException;
 
     }
 

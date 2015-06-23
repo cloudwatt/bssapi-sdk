@@ -8,7 +8,7 @@ import com.cloudwatt.apis.bss.spec.domain.consumption.TypedHourlyEvent;
  * @author pierre souchay
  *
  */
-public interface HourlyMaxFloatingIpsEvent extends TypedHourlyEvent {
+public interface HourMaxFloatingIpsOpenstackAggregatedMetricEvent extends TypedHourlyEvent {
 
     /**
      * Get the Ips related to this consumption

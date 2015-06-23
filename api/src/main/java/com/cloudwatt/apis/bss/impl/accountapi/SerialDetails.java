@@ -14,20 +14,18 @@ import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Payment;
 import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEventBase;
+import com.cloudwatt.apis.bss.spec.domain.consumption.block.HourBlockSizeOpenstackAggregatedMetricEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.block.HourSnapshotSizeOpenstackAggregatedMetricEvent;
-import com.cloudwatt.apis.bss.spec.domain.consumption.block.HourlyBlockSizeEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourComputeOutgoingBytesOpenstackAggregatedMetricEvent;
-import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourlyInstanceEvent;
-import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourlyMaxFloatingIpsEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourInstanceOpenstackAggregatedMetricEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourMaxFloatingIpsOpenstackAggregatedMetricEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.object.HourObjectOutgoingBytesOpenstackAggregatedMetricEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.object.HourObjectSizeOpenstackAggregatedMetricEvent;
-import com.cloudwatt.apis.bss.spec.domain.consumption.object.HourlySwiftOutgoingBytes;
 import com.cloudwatt.apis.bss.spec.utils.CommonFormats;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -313,63 +311,62 @@ class SerialDetails {
         private final Iterable<Invoice> invoices;
     }
 
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", defaultImpl = HouryEventDefaultImpl.class)
-    @JsonSubTypes({
-                   @Type(value = HourlyEventInstanceImpl.class, name = "HourInstanceOpenstackAggregatedMetricEvent"),
-                   @Type(value = HourlyMaxFloatingIpImpl.class, name = "HourMaxFloatingIpsOpenstackAggregatedMetricEvent"),
-                   @Type(value = HourlyBlockSizeImpl.class, name = "HourBlockSizeOpenstackAggregatedMetricEvent"),
-                   @Type(value = HourlySwiftSizeImpl.class, name = "HourObjectSizeOpenstackAggregatedMetricEvent"),
-                   @Type(value = HourSnapshotSizeOpenstackAggregatedMetricEventImpl.class, name = "HourSnapshotSizeOpenstackAggregatedMetricEvent"),
-                   @Type(value = HourComputeOutgoingBytesOpenstackAggregatedMetricEventImpl.class, name = "HourComputeOutgoingBytesOpenstackAggregatedMetricEvent"),
-                   @Type(value = HourlySwiftOutgoingBytesImpl.class, name = "HourObjectOutgoingBytesOpenstackAggregatedMetricEvent") })
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static class HouryEventImpl implements HourlyEvent {
+    static class HouryEventImpl implements HourlyEventBase, HourBlockSizeOpenstackAggregatedMetricEvent,
+            HourComputeOutgoingBytesOpenstackAggregatedMetricEvent, HourSnapshotSizeOpenstackAggregatedMetricEvent,
+            HourObjectSizeOpenstackAggregatedMetricEvent, HourInstanceOpenstackAggregatedMetricEvent,
+            HourMaxFloatingIpsOpenstackAggregatedMetricEvent, HourObjectOutgoingBytesOpenstackAggregatedMetricEvent
+
+    {
 
         @Override
         public EventType getEventType() {
-            return null;
+            try {
+                return EventType.valueOf(getType());
+            } catch (NullPointerException err) {
+                return EventType.Unknown;
+            }
         }
 
         @JsonCreator
-        protected HouryEventImpl(@JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId) {
+        @SuppressWarnings("nls")
+        protected HouryEventImpl(Map<String, Object> fields) {
+            this.fields = fields;
+            this.projectId = getString("projectId");
+            this.computeDate = new Date((Long) fields.remove("computeDate"));
+            this.type = String.valueOf(fields.remove("type"));
+            fields.remove("version");
+            fields.remove("origin");
+            fields.remove("tags");
+            fields.remove("year");
+            fields.remove("month");
+            fields.remove("day");
+            fields.remove("hour");
+            fields.remove("checksum");
+            fields.remove("guid");
+            fields.remove("timestamp");
+        }
 
-            this.type = type;
-            this.computeDate = computeDate;
-            this.utcYear = utcYear;
-            this.utcMonth = utcMonth;
-            this.utcDay = utcDay;
-            this.utcHour = utcHour;
-            this.projectId = projectId;
+        protected long getLong(String name) {
+            return (Long) fields.get(name);
+        }
+
+        protected Date getDate(String name) {
+            return new Date(getLong(name));
+        }
+
+        protected String getString(String name) {
+            return (String) fields.get(name);
+        }
+
+        private Map<String, Object> fields;
+
+        public Map<String, Object> getFields() {
+            return fields;
         }
 
         public String getType() {
             return type;
-        }
-
-        @Override
-        public short getUtcYear() {
-            return utcYear;
-        }
-
-        @Override
-        public short getUtcMonth() {
-            return utcMonth;
-        }
-
-        @Override
-        public short getUtcDay() {
-            return utcDay;
-        }
-
-        @Override
-        public short getUtcHour() {
-            return utcHour;
         }
 
         @Override
@@ -382,6 +379,10 @@ class SerialDetails {
             return computeDate;
         }
 
+        private final String type, projectId;
+
+        private final Date computeDate;
+
         protected StringBuilder createStringBuilderPrefix() {
             StringBuilder sb = new StringBuilder(64);
             sb.append(CommonFormats.buildIso8601Format().format(getUtcComputeDate()))
@@ -391,477 +392,140 @@ class SerialDetails {
             return sb;
         }
 
-        private final String type;
-
-        private final Date computeDate;
-
-        private final short utcYear;
-
-        private final short utcMonth;
-
-        private final short utcDay;
-
-        private final short utcHour;
-
-        private final String projectId;
-
-    }
-
-    static class HouryEventDefaultImpl extends HouryEventImpl {
-
-        @JsonCreator
-        public HouryEventDefaultImpl(@JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-        }
-
         @Override
         public String toString() {
-            return createStringBuilderPrefix().toString();
+            StringBuilder sb = createStringBuilderPrefix();
+            sb.append(getFields());
+            return sb.toString();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T extends HourlyEvent> Optional<T> castAs(Class<T> clazz) {
+            if (!getEventType().getClazz().isAssignableFrom(clazz)) {
+                return Optional.absent();
+            }
+            if (clazz.isAssignableFrom(getClass())) {
+                return Optional.of((T) this);
+            } else {
+                return Optional.absent();
+            }
         }
 
         @Override
-        public EventType getEventType() {
-            return EventType.Unknown;
-        }
-    }
-
-    static class HourlyMaxFloatingIpImpl extends HouryEventImpl implements HourlyMaxFloatingIpsEvent {
-
-        @JsonCreator
-        public HourlyMaxFloatingIpImpl(@JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId,
-                @JsonProperty(value = "ips", required = true) Iterable<String> ips,
-                @JsonProperty(value = "counter", required = true) int counter) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-            this.ips = ips;
-            this.counter = counter;
+        public UUID getResourceId() {
+            return UUID.fromString(getString("resourceId")); //$NON-NLS-1$
         }
 
         @Override
-        public String toString() {
-            return createStringBuilderPrefix().append(String.valueOf(getIps())).toString();
+        public long getSizeInBytes() {
+            return getSize();
         }
 
-        private final Iterable<String> ips;
+        public long getSize() {
+            return getLong("size"); //$NON-NLS-1$
+        }
 
-        private final int counter;
+        @Override
+        public UUID getVolumeType() {
+            return UUID.fromString(getString("volumeType")); //$NON-NLS-1$
+        }
+
+        @Override
+        public long getRequestsCounter() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
 
         @Override
         public Iterable<String> getIps() {
-            return ips;
+            // TODO Auto-generated method stub
+            return null;
         }
 
         @Override
         public int getCounter() {
-            return counter;
+            return (int) getLong("counter"); //$NON-NLS-1$
         }
-
-        @Override
-        public EventType getEventType() {
-            return EventType.HourMaxFloatingIpsOpenstackAggregatedMetricEvent;
-        }
-    }
-
-    static class HourlySwiftOutgoingBytesImpl extends HouryEventImpl implements HourlySwiftOutgoingBytes {
-
-        @JsonCreator
-        public HourlySwiftOutgoingBytesImpl(@JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId,
-                @JsonProperty(value = "size", required = true) long size,
-                @JsonProperty(value = "counter", required = true) long counter) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-            this.size = size;
-            this.counter = counter;
-        }
-
-        @Override
-        public String toString() {
-            return createStringBuilderPrefix().append(getRequestsCounter())
-                                              .append(' ')
-                                              .append(getSizeInBytes())
-                                              .toString();
-        }
-
-        private final long counter;
-
-        private final long size;
-
-        @Override
-        public long getRequestsCounter() {
-            return counter;
-        }
-
-        @Override
-        public long getSizeInBytes() {
-            return size;
-        }
-
-        @Override
-        public EventType getEventType() {
-            return EventType.HourObjectOutgoingBytesOpenstackAggregatedMetricEvent;
-        }
-
-    }
-
-    static class HourComputeOutgoingBytesOpenstackAggregatedMetricEventImpl extends HouryEventImpl implements
-            HourComputeOutgoingBytesOpenstackAggregatedMetricEvent {
-
-        @JsonCreator
-        public HourComputeOutgoingBytesOpenstackAggregatedMetricEventImpl(
-                @JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId,
-                @JsonProperty(value = "cumulativeSize", required = true) long cumulativeSizeInBytes,
-                @JsonProperty(value = "resourceId", required = true) UUID resourceId) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-            this.cumulativeSizeInBytes = cumulativeSizeInBytes;
-            this.resourceId = resourceId;
-        }
-
-        @Override
-        public String toString() {
-            return createStringBuilderPrefix().append(getResourceId()).append(' ').append(getSizeInBytes()).toString();
-        }
-
-        private final long cumulativeSizeInBytes;
-
-        @Override
-        public UUID getResourceId() {
-            return resourceId;
-        }
-
-        private final UUID resourceId;
-
-        @Override
-        public EventType getEventType() {
-            return EventType.HourComputeOutgoingBytesOpenstackAggregatedMetricEvent;
-        }
-
-        @Override
-        public long getSizeInBytes() {
-            return cumulativeSizeInBytes;
-        }
-
-    }
-
-    static class HourlyBlockSizeImpl extends HouryEventImpl implements HourlyBlockSizeEvent {
-
-        @JsonCreator
-        public HourlyBlockSizeImpl(@JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId,
-                @JsonProperty(value = "size", required = true) long size,
-                @JsonProperty(value = "resourceId", required = true) UUID resourceId,
-                @JsonProperty(value = "volumeId", required = true) UUID volumeType) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-            this.size = size;
-            this.resourceId = resourceId;
-            this.volumeType = volumeType;
-        }
-
-        @Override
-        public String toString() {
-            return createStringBuilderPrefix().append(getResourceId()).append(' ').append(getSizeInBytes()).toString();
-        }
-
-        private final long size;
-
-        @Override
-        public UUID getVolumeType() {
-            return volumeType;
-        }
-
-        @Override
-        public UUID getResourceId() {
-            return resourceId;
-        }
-
-        @Override
-        public long getSizeInBytes() {
-            return size;
-        }
-
-        private final UUID volumeType;
-
-        private final UUID resourceId;
-
-        @Override
-        public EventType getEventType() {
-            return EventType.HourBlockSizeOpenstackAggregatedMetricEvent;
-        }
-
-    }
-
-    static class HourSnapshotSizeOpenstackAggregatedMetricEventImpl extends HouryEventImpl implements
-            HourSnapshotSizeOpenstackAggregatedMetricEvent {
-
-        @JsonCreator
-        public HourSnapshotSizeOpenstackAggregatedMetricEventImpl(
-                @JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId,
-                @JsonProperty(value = "size", required = true) long size,
-                @JsonProperty(value = "resourceId", required = true) UUID resourceId) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-            this.size = size;
-            this.resourceId = resourceId;
-        }
-
-        private final UUID resourceId;
-
-        @Override
-        public UUID getResourceId() {
-            return resourceId;
-        }
-
-        @Override
-        public String toString() {
-            return createStringBuilderPrefix().append(getResourceId()).append(' ').append(getSizeInBytes()).toString();
-        }
-
-        private final long size;
-
-        @Override
-        public long getSizeInBytes() {
-            return size;
-        }
-
-        @Override
-        public EventType getEventType() {
-            return EventType.HourSnapshotSizeOpenstackAggregatedMetricEvent;
-        }
-
-    }
-
-    static class HourlySwiftSizeImpl extends HouryEventImpl implements HourObjectSizeOpenstackAggregatedMetricEvent {
-
-        @JsonCreator
-        public HourlySwiftSizeImpl(@JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId,
-                @JsonProperty(value = "size", required = true) long size) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-            this.size = size;
-        }
-
-        @Override
-        public String toString() {
-            return createStringBuilderPrefix().append(getSizeInBytes()).toString();
-        }
-
-        private final long size;
-
-        @Override
-        public long getSizeInBytes() {
-            return size;
-        }
-
-        @Override
-        public EventType getEventType() {
-            return EventType.HourObjectSizeOpenstackAggregatedMetricEvent;
-        }
-
-    }
-
-    static class HourlyEventInstanceImpl extends HouryEventImpl implements HourlyInstanceEvent {
-
-        @JsonCreator
-        public HourlyEventInstanceImpl(@JsonProperty(value = "type", required = true) String type,
-                @JsonProperty(value = "computeDate", required = true) Date computeDate,
-                @JsonProperty(value = "year", required = true) short utcYear,
-                @JsonProperty(value = "month", required = true) short utcMonth,
-                @JsonProperty(value = "day", required = true) short utcDay,
-                @JsonProperty(value = "hour", required = true) short utcHour,
-                @JsonProperty(value = "projectId", required = true) String projectId,
-                @JsonProperty(value = "instanceType", required = true) String instanceType,
-                @JsonProperty(value = "imageOrigin", required = false) String imageOrigin,
-                @JsonProperty(value = "imageOs", required = false) String imageOs,
-                @JsonProperty(value = "imageName", required = false) String imageName,
-                @JsonProperty(value = "durationLifetime", required = true) long durationLifetime,
-                @JsonProperty(value = "durationDowntime", required = true) long durationDowntime,
-                @JsonProperty(value = "durationUptime", required = true) long durationUptime,
-                @JsonProperty(value = "durationSleeptime", required = true) long durationSleeptime,
-                @JsonProperty(value = "durationPausetime", required = true) long durationPausetime,
-                @JsonProperty(value = "durationRescuetime", required = true) long durationRescuetime,
-                @JsonProperty(value = "durationShelvetime", required = true) long durationShelvetime,
-                @JsonProperty(value = "imageId", required = false) String imageId,
-                @JsonProperty(value = "instanceId", required = true) UUID instanceId) {
-            super(type, computeDate, utcYear, utcMonth, utcDay, utcHour, projectId);
-            this.instanceType = instanceType;
-            this.imageOrigin = Optional.fromNullable(imageOrigin);
-            this.imageOs = Optional.fromNullable(imageOs);
-            this.imageName = imageName;
-            this.durationLifetime = durationLifetime;
-            this.durationDowntime = durationDowntime;
-            this.durationUptime = durationUptime;
-            this.durationSleeptime = durationSleeptime;
-            this.durationPausetime = durationPausetime;
-            this.durationRescuetime = durationRescuetime;
-            this.durationShelvetime = durationShelvetime;
-            this.imageId = imageId;
-            this.instanceId = instanceId;
-        }
-
-        private final UUID instanceId;
 
         @Override
         public UUID getInstanceId() {
-            return instanceId;
-        }
-
-        /**
-         * Same as {@link #getInstanceId()}
-         */
-        @Override
-        public UUID getResourceId() {
-            return instanceId;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = createStringBuilderPrefix();
-            sb.append(getInstanceId())
-              .append(' ')
-              .append(getDurationLifeTimeInMs())
-              .append(' ')
-              .append(getInstanceType());
-            return sb.toString();
+            return getResourceId();
         }
 
         @Override
         public String getInstanceType() {
-            return instanceType;
+            return getString("instanceType"); //$NON-NLS-1$
         }
 
         @Override
         public Optional<String> getImageOrigin() {
-            return imageOrigin;
+            return Optional.of(getString("imageOrigin")); //$NON-NLS-1$
         }
 
         @Override
         public Optional<String> getImageOs() {
-            return imageOs;
+            return Optional.of(getString("imageOs"));//$NON-NLS-1$
         }
 
         @Override
         public long getDurationLifeTimeInMs() {
-            return durationLifetime;
+            return getLong("durationLifetime"); //$NON-NLS-1$
+
         }
 
         @Override
         public long getDurationDownTimeInMs() {
-            return durationDowntime;
+            return getLong("durationDowntime");//$NON-NLS-1$
         }
 
         @Override
         public long getUpTimeInMs() {
-            return durationUptime;
+            return getLong("durationUptime");//$NON-NLS-1$
         }
 
         @Override
         public long getSleepTimeInMs() {
-            return durationSleeptime;
+            return getLong("durationSleeptime");//$NON-NLS-1$
         }
 
         @Override
         public long getPauseTimeInMs() {
-            return durationPausetime;
+            return getLong("durationPausetime");//$NON-NLS-1$
         }
 
         @Override
         public long getRescueTimeInMs() {
-            return durationRescuetime;
+            return getLong("durationRescuetime");//$NON-NLS-1$
         }
 
         @Override
         public long getShelveTimeInMs() {
-            return durationShelvetime;
+            return getLong("durationShelvetime");//$NON-NLS-1$
         }
 
         @Override
         public String getImageId() {
-            return imageId;
+            return getString("imageId"); //$NON-NLS-1$
         }
 
         @Override
         public String getImageName() {
-            return imageName;
+            return getString("imageName"); //$NON-NLS-1$
         }
-
-        private final String instanceType;
-
-        private final Optional<String> imageOrigin;
-
-        private final Optional<String> imageOs;
-
-        private final String imageName;
-
-        private final long durationLifetime;
-
-        private final long durationDowntime;
-
-        private final long durationUptime;
-
-        private final long durationSleeptime;
-
-        private final long durationPausetime;
-
-        private final long durationRescuetime;
-
-        private final long durationShelvetime;
-
-        private final String imageId;
-
-        @Override
-        public EventType getEventType() {
-            return EventType.HourInstanceOpenstackAggregatedMetricEvent;
-        }
-
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ListOfEventsImpl {
 
         @JsonCreator
-        public ListOfEventsImpl(@JsonProperty("events") Iterable<? extends HouryEventImpl> events) {
+        public ListOfEventsImpl(@JsonProperty("events") Iterable<HouryEventImpl> events) {
             this.events = events;
         }
 
-        private final Iterable<? extends HourlyEvent> events;
+        private final Iterable<? extends HourlyEventBase> events;
 
-        public Iterable<? extends HourlyEvent> getEvents() {
+        public Iterable<? extends HourlyEventBase> getEvents() {
             return events;
         }
     }

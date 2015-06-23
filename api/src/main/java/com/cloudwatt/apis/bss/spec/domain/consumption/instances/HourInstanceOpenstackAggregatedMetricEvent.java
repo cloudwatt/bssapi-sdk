@@ -1,10 +1,11 @@
 package com.cloudwatt.apis.bss.spec.domain.consumption.instances;
 
 import java.util.UUID;
-import com.cloudwatt.apis.bss.spec.domain.consumption.ResourceTypedEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.ResourceEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.TypedHourlyEvent;
 import com.google.common.base.Optional;
 
-public interface HourlyInstanceEvent extends ResourceTypedEvent {
+public interface HourInstanceOpenstackAggregatedMetricEvent extends TypedHourlyEvent, ResourceEvent {
 
     public UUID getInstanceId();
 

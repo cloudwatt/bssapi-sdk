@@ -2,7 +2,7 @@ package com.cloudwatt.apis.bss.spec.domain.consumption;
 
 import java.util.UUID;
 
-public interface ResourceTypedEvent extends TypedHourlyEvent {
+public interface ResourceEvent {
 
     /**
      * Get the resource Id

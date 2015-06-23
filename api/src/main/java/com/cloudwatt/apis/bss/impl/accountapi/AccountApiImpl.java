@@ -24,7 +24,7 @@ import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
-import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEventBase;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.cloudwatt.apis.bss.spec.utils.CommonFormats;
 import com.google.common.base.Optional;
@@ -202,7 +202,7 @@ public class AccountApiImpl implements AccountApi {
                 }
 
                 @Override
-                public Iterable<? extends HourlyEvent> get() throws IOException, TooManyRequestsException {
+                public Iterable<? extends HourlyEventBase> get() throws IOException, TooManyRequestsException {
                     return context.getWebClient()
                                   .doRequestAndRetrieveResultAsJSON(SerialDetails.ListOfEventsImpl.class,
                                                                     new HttpGet(context.buildPublicApiUrl(String.format("bss/accounts/1/rawConsumption/tenant/%s", tenant.getTenantId()), //$NON-NLS-1$
