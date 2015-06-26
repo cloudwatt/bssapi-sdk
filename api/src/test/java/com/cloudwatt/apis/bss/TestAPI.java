@@ -47,6 +47,7 @@ public class TestAPI {
             System.out.println(" = All Caps (" + locale.getLanguage() + "): " + api.getAllCapsAndDescriptions(locale));
             System.out.println(" = All Account Types (en): " + api.getAllAccountTypes(locale));
         }
+        System.out.println(api.getCountryCodes());
     }
 
     /**

@@ -6,6 +6,7 @@ package com.cloudwatt.apis.bss.spec.commonapi;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 
 /**
@@ -41,5 +42,13 @@ public interface CommonApi {
      * 
      */
     public Map<String, String> getAllAccountTypes(Locale locale) throws IOException, TooManyRequestsException;
+
+    /**
+     * Get the list of valid country codes
+     * 
+     * @return a set of Country code
+     * @throws IOException, TooManyRequestsException if web API cannot be reached
+     */
+    public Set<String> getCountryCodes() throws IOException, TooManyRequestsException;
 
 }

@@ -4,9 +4,12 @@
 package com.cloudwatt.apis.bss.impl.commonapi;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import org.apache.http.client.methods.HttpGet;
 import com.cloudwatt.apis.bss.impl.ApiContext;
 import com.cloudwatt.apis.bss.impl.Constants;
@@ -14,6 +17,8 @@ import com.cloudwatt.apis.bss.impl.JSONUtilities;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Optional;
 
@@ -73,5 +78,37 @@ public class CommonApiImpl implements CommonApi {
                                                                  Optional.<TokenAccess> of(context.getTokenAccess()))
                                .get();
         return JSONUtilities.jsonNodeToMap(node);
+    }
+
+    private final Set<String> countryCodes = new TreeSet<String>();
+
+    private static class CountryCodesList {
+
+        private final Set<String> countryCodes;
+
+        @JsonCreator
+        public CountryCodesList(@JsonProperty("country_codes") Collection<String> countryCodes) {
+            this.countryCodes = new TreeSet<String>(countryCodes);
+        }
+
+        public Set<String> getCountryCodes() {
+            return countryCodes;
+        }
+    }
+
+    @Override
+    public Set<String> getCountryCodes() throws IOException, TooManyRequestsException {
+        if (!countryCodes.isEmpty()) {
+            return Collections.unmodifiableSet(countryCodes);
+        }
+        final HttpGet get = new HttpGet(context.buildPublicApiUrl("bss/1/countryCode", //$NON-NLS-1$
+                                                                  Collections.<String, String> emptyMap()));
+        CountryCodesList node = context.getWebClient()
+                                       .doRequestAndRetrieveResultAsJSON(CountryCodesList.class,
+                                                                         get,
+                                                                         Optional.<TokenAccess> of(context.getTokenAccess()))
+                                       .get();
+        countryCodes.addAll(node.getCountryCodes());
+        return Collections.unmodifiableSet(countryCodes);
     }
 }
