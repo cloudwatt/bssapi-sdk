@@ -57,6 +57,21 @@ public class BSSHandlerImpl implements BSSApiHandle {
 
         private final AccountWithRoles account;
 
+        @Override
+        public String getName() {
+            return account.getName();
+        }
+
+        @Override
+        public Optional<String> getCorporateName() {
+            return account.getCorporateName();
+        }
+
+        @Override
+        public String getEmail() {
+            return account.getEmail();
+        }
+
     }
 
     /**

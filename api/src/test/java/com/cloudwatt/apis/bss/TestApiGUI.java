@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -25,7 +26,6 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.table.AbstractTableModel;
 import com.cloudwatt.apis.bss.gui.AccountInformationWidget;
@@ -142,7 +142,10 @@ public class TestApiGUI {
 
                                             // Step 1 : initialize API with credentials
                                             final BSSAccountFactory factory = new BSSAccountFactory.Builder(userF.getText(),
-                                                                                                            new String(passwordF.getPassword())).build();
+                                                                                                            new String(passwordF.getPassword()))
+                                                                                                            //.keystonePublicEndpoint(new URL("http://127.0.0.1:9479/rest/kspublic/keystone/v2.0/"))
+                                                                                                            //                                    .overrideBSSAPIEndpoint(new URL("http://127.0.0.1:9479/rest/public"))
+                                                                                                                                                .build();
 
                                             final BSSApiHandle mainApi = factory.getHandle();
                                             connected = true;
@@ -242,7 +245,8 @@ public class TestApiGUI {
                                                     });
 
                                                     for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
-                                                        tab.addTab(a.getCustomerId() + " " + a.getNamedRoles(),
+                                                        tab.addTab(a.getCustomerId() + " " + a.getName() + " "
+                                                                           + a.getEmail() + " " + a.getNamedRoles(),
                                                                    new AccountInformationWidget(executor, a));
                                                     }
                                                     tab.revalidate();
@@ -288,14 +292,12 @@ public class TestApiGUI {
 
                             @Override
                             public void hyperlinkUpdate(HyperlinkEvent e) {
-                                if (e.getEventType() == EventType.ACTIVATED) {
+                                if (e.getEventType() == javax.swing.event.HyperlinkEvent.EventType.ACTIVATED) {
                                     try {
                                         Desktop.getDesktop().browse(e.getURL().toURI());
                                     } catch (IOException e1) {
-                                        // TODO Auto-generated catch block
                                         e1.printStackTrace();
                                     } catch (URISyntaxException e1) {
-                                        // TODO Auto-generated catch block
                                         e1.printStackTrace();
                                     }
                                 }

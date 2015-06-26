@@ -7,6 +7,7 @@ import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 /**
  * @author pierre
@@ -23,6 +24,8 @@ public class AccountDetailsImpl implements AccountDetails {
 
     private final String siret_siren;
 
+    private final String corporateName;
+
     public String getPhoneOffice() {
         return phone_office;
     }
@@ -33,6 +36,7 @@ public class AccountDetailsImpl implements AccountDetails {
             @JsonProperty(value = "email", required = false) String email,
             @JsonProperty(value = "siret_siren", required = false) String siret_siren,
             @JsonProperty(value = "name", required = false) String name,
+            @JsonProperty(value = "corporate_name", required = false) String corporateName,
             @JsonProperty(value = "billing_address_street", required = false) String billing_address_street,
             @JsonProperty(value = "billing_address_postalcode", required = false) String billing_address_postalcode,
             @JsonProperty(value = "billing_address_city", required = false) String billing_address_city,
@@ -42,6 +46,7 @@ public class AccountDetailsImpl implements AccountDetails {
         this.phone_office = phone_office;
         this.email = email;
         this.siret_siren = siret_siren;
+        this.corporateName = corporateName;
         this.name = name;
         this.billing_address_street = billing_address_street;
         this.billing_address_postalcode = billing_address_postalcode;
@@ -108,6 +113,11 @@ public class AccountDetailsImpl implements AccountDetails {
     @Override
     public String getBillingCountry() {
         return billing_address_country;
+    }
+
+    @Override
+    public Optional<String> getCorporateName() {
+        return Optional.fromNullable(corporateName);
     }
 
 }

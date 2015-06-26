@@ -19,7 +19,7 @@ public class HttpUnexpectedError extends IOExceptionLocalized {
     /**
      * Constructor
      * 
-     * @param translation key
+     * @param key the translation key
      * @param uri The URI
      * @param httpCode the HTTP Code
      * @param httpMessage message

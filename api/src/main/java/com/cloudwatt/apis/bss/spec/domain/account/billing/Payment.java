@@ -13,7 +13,7 @@ public interface Payment {
     /**
      * Get the ID of payment
      * 
-     * @return
+     * @return the ID of Payment
      */
     public int getId();
 

@@ -7,7 +7,7 @@ public interface HourlyEventBase extends HourlyEvent {
     /**
      * Cast the Event as given subclass
      * 
-     * @param interface to get
+     * @param clazz interface to get
      * @return {@link Optional#absent()} if cast is not possible
      */
     <T extends HourlyEvent> Optional<T> castAs(Class<T> clazz);
