@@ -15,6 +15,7 @@ import com.cloudwatt.apis.bss.spec.domain.AccountWithRoles;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
 import com.cloudwatt.apis.bss.spec.domain.Identity;
+import com.cloudwatt.apis.bss.spec.domain.account.AccountMinimalInformation;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.google.common.base.Optional;
@@ -58,18 +59,8 @@ public class BSSHandlerImpl implements BSSApiHandle {
         private final AccountWithRoles account;
 
         @Override
-        public String getName() {
-            return account.getName();
-        }
-
-        @Override
-        public Optional<String> getCorporateName() {
-            return account.getCorporateName();
-        }
-
-        @Override
-        public String getEmail() {
-            return account.getEmail();
+        public Optional<AccountMinimalInformation> getAccountMinimalInformation() {
+            return account.getAccountMinimalInformation();
         }
 
     }

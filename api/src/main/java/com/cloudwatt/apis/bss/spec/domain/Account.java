@@ -3,8 +3,6 @@
  */
 package com.cloudwatt.apis.bss.spec.domain;
 
-import com.google.common.base.Optional;
-
 /**
  * The account is the concept that represent a not physical entity responsible for paying the cloud resources
  * 
@@ -19,11 +17,4 @@ public interface Account {
      * @return the CustomerId, a string that will be displayed in invoices
      */
     public String getCustomerId();
-
-    public String getName();
-
-    public Optional<String> getCorporateName();
-
-    public String getEmail();
-
 }

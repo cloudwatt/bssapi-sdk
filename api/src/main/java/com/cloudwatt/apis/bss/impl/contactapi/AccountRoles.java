@@ -4,7 +4,9 @@
 package com.cloudwatt.apis.bss.impl.contactapi;
 
 import java.util.Set;
+import com.cloudwatt.apis.bss.impl.accountapi.MinimumAccountInformationImpl;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRoles;
+import com.cloudwatt.apis.bss.spec.domain.account.AccountMinimalInformation;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -25,21 +27,20 @@ public class AccountRoles implements AccountWithRoles {
      * @param caps
      */
     @JsonCreator
-    public AccountRoles(@JsonProperty(value = "account", required = true) String account,
+    public AccountRoles(
+            @JsonProperty(value = "account", required = true) String account,
             @JsonProperty(value = "roles", required = true) Set<String> roles,
             @JsonProperty(value = "caps", required = true) Set<String> caps,
-            @JsonProperty(value = "corporate_name", required = false) String corporateName,
-            @JsonProperty(value = "email", required = false) String email,
-            @JsonProperty(value = "name", required = false) String name) {
+            @JsonProperty(value = "accountInformation", required = false) MinimumAccountInformationImpl accountInformation) {
         this.account = account;
         this.roles = roles;
         this.caps = caps;
-        this.corporateName = corporateName;
-        this.email = email;
-        this.name = name;
+        this.accountInformation = accountInformation;
     }
 
-    private final String account, name, email, corporateName;
+    private final String account;
+
+    private final AccountMinimalInformation accountInformation;
 
     private final Set<String> roles;
 
@@ -75,18 +76,7 @@ public class AccountRoles implements AccountWithRoles {
     }
 
     @Override
-    public String getName() {
-        return name;
+    public Optional<AccountMinimalInformation> getAccountMinimalInformation() {
+        return Optional.fromNullable(accountInformation);
     }
-
-    @Override
-    public Optional<String> getCorporateName() {
-        return Optional.<String> fromNullable(corporateName);
-    }
-
-    @Override
-    public String getEmail() {
-        return email;
-    }
-
 }

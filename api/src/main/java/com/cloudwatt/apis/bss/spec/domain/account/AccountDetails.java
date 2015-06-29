@@ -8,7 +8,7 @@ import com.cloudwatt.apis.bss.spec.domain.Account;
  * @author pierre souchay
  *
  */
-public interface AccountDetails extends Account {
+public interface AccountDetails extends Account, AccountMinimalInformation {
 
     public String getBillingAddress();
 

@@ -141,9 +141,8 @@ public class TestApiGUI {
 
                                             // Step 1 : initialize API with credentials
                                             final BSSAccountFactory factory = new BSSAccountFactory.Builder(userF.getText(),
-                                                                                                            new String(passwordF.getPassword()))
-                                                                                                            //.keystonePublicEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/kspublic/keystone/v2.0/"))
-                                                                                                            //                                    .overrideBSSAPIEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/public"))
+                                                                                                            new String(passwordF.getPassword())).keystonePublicEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/kspublic/keystone/v2.0/"))
+                                                                                                                                                .overrideBSSAPIEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/public"))
                                                                                                                                                 .build();
 
                                             final BSSApiHandle mainApi = factory.getHandle();
@@ -244,9 +243,23 @@ public class TestApiGUI {
                                                     });
 
                                                     for (AccountWithRolesWithOperations a : mainApi.getAccounts()) {
-                                                        tab.addTab(a.getCustomerId() + " " + a.getName() + " "
-                                                                           + a.getEmail() + " " + a.getNamedRoles(),
-                                                                   new AccountInformationWidget(executor, a));
+                                                        final String tabName = a.getAccountMinimalInformation()
+                                                                                .isPresent() ? String.format("%s %s (%s) %s roles: %s",
+                                                                                                             a.getCustomerId(),
+                                                                                                             a.getAccountMinimalInformation()
+                                                                                                              .get()
+                                                                                                              .getName(),
+                                                                                                             a.getAccountMinimalInformation()
+                                                                                                              .get()
+                                                                                                              .getEmail(),
+                                                                                                             a.getAccountMinimalInformation()
+                                                                                                              .get()
+                                                                                                              .getCorporateName()
+                                                                                                              .or(""),
+                                                                                                             a.getNamedRoles()) : String.format("%s roles: %s",
+                                                                                                                                                a.getCustomerId(),
+                                                                                                                                                a.getNamedRoles());
+                                                        tab.addTab(tabName, new AccountInformationWidget(executor, a));
                                                     }
                                                     tab.revalidate();
                                                 }
