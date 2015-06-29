@@ -6,7 +6,6 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -143,8 +142,8 @@ public class TestApiGUI {
                                             // Step 1 : initialize API with credentials
                                             final BSSAccountFactory factory = new BSSAccountFactory.Builder(userF.getText(),
                                                                                                             new String(passwordF.getPassword()))
-                                                                                                            //.keystonePublicEndpoint(new URL("http://127.0.0.1:9479/rest/kspublic/keystone/v2.0/"))
-                                                                                                            //                                    .overrideBSSAPIEndpoint(new URL("http://127.0.0.1:9479/rest/public"))
+                                                                                                            //.keystonePublicEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/kspublic/keystone/v2.0/"))
+                                                                                                            //                                    .overrideBSSAPIEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/public"))
                                                                                                                                                 .build();
 
                                             final BSSApiHandle mainApi = factory.getHandle();
