@@ -141,9 +141,10 @@ public class TestApiGUI {
 
                                             // Step 1 : initialize API with credentials
                                             final BSSAccountFactory factory = new BSSAccountFactory.Builder(userF.getText(),
-                                                                                                            new String(passwordF.getPassword())).keystonePublicEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/kspublic/keystone/v2.0/"))
-                                                                                                                                                .overrideBSSAPIEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/public"))
-                                                                                                                                                .build();
+                                                                                                            new String(passwordF.getPassword()))
+                                                                                                           // .keystonePublicEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/kspublic/keystone/v2.0/"))
+                                                                                                           // .overrideBSSAPIEndpoint(new java.net.URL("http://127.0.0.1:9479/rest/public"))
+                                                                                                            .build();
 
                                             final BSSApiHandle mainApi = factory.getHandle();
                                             connected = true;
