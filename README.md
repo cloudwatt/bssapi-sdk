@@ -1,4 +1,4 @@
-[![Build Status](https://img.shields.io/travis/cloudwatt/bssapi-sdk.svg)](https://travis-ci.org/cloudwatt/bssapi-sdk)
+[![Build Status](https://api.travis-ci.org/cloudwatt/bssapi-sdk.svg)](https://travis-ci.org/cloudwatt/bssapi-sdk)
 
 Cloudwatt Public API
 ====================
