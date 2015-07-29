@@ -1,16 +1,7 @@
 [![Build Status](https://api.travis-ci.org/cloudwatt/bssapi-sdk.svg)](https://travis-ci.org/cloudwatt/bssapi-sdk)
 
-Cloudwatt Public API
-====================
-
-Overview
---------
-
-This API is intended for users that would like to use advanced Cloudwatt features including:
-
-- Automatic Provisioning of accounts and tenants
-- Get Invoice informations
-- Get consumption in real time...
+BSS-SDK
+=======
 
 This directory contains the api itself ([api directory](api/README.md)) and several working examples in the directory [api/src/test/java/com/cloudwatt/apis/bss/](./api/src/test/java/com/cloudwatt/apis/bss/)
 
@@ -20,4 +11,75 @@ Binaries
 
 Changelog
 ---------
+v0.2.3: fixed various bug fixes. Added methods to fetch consumption in real time.
 v0.2.1: first public release. Only read only methods for now.
+
+Business Support System API
+===========================
+
+Overview
+--------
+
+Business Support System (BSS) API let you manage your account, identity information and automate creation of accounts, identities, and openstack projects. It also exposes Openstack features that are normally open only to Cloud administrators such as granting roles on tenants or creating new users and tenants.
+
+It also helps having a good overview of your consumption and automate things such as billing integration.
+
+Semantics and concepts
+----------------------
+
+BSS APIs uses the same semantics as Openstack APIs. It uses the same authentication mechanism (tokens), uses a role-based autorization the same way Openstack does and exposes the same kind of Rest semantics.
+
+In order to use this API, you need to understand the basic concept :
+
+ - the identity (or contact): the user performing a call, basically an email and password. A User of BSS/Openstack API
+ - the account: the billing entity. Each month, each account pays for the tenants it owns. For each account, an invoice is generated. Optionnaly, you can create some sub accounts. If you use this features, the parent account pays the bills for all its sub accounts (of course it means the parent account will pay for all consumption of all tenants found in all sub accounts).
+ 
+In order to use an account, an identity needs to have roles in the same way an identity has roles to some tenant(s). In the same way as Openstack, the identity can have one or more roles on a specific tenant, thus the operations you can perform are the union of all the capabilities of all you roles, meaning if you have two roles, you can perform all operations granted by role1 and role2. Once again, those are the same semantics as the ones found in Openstack.
+
+Usage
+-----
+
+In Openstack, when an identity connects thru keystone, it can list the tenants it can work with. In BSS API, the same mechanism is present, which means that you can list all the accounts you can work with.
+
+However, while Openstack does not explain what are the features you can use if you have a role, when you list the roles in BSS API, it also gives you the list of operations you can perform (this is known as Capabilities).
+
+By reading the documentation of APIs, you can decide without calling the service whenever you may call it (this feature is not present in Openstack).
+
+Example Get a listing of the invoices of all the accounts I have:
+
+1. Get a token
+2. List the capabilities you have on all accounts you can use
+3. for each account where I have the capability BILLING_INVOICES
+4. Get the listing of invoices for this account
+
+CORS Support
+------------
+
+BSS API implements fully CORS (Cross-origin resource sharing), which means you can easily use those APIs within a simple static Web page. It may be useful for creating dashboard or business specific features.
+
+Documentation
+-------------
+
+Documentation is always up to date since it is published by the API itself at [https://bssapi.fr1.cloudwatt.com/apidocs/public.api.notes.json](https://bssapi.fr1.cloudwatt.com/apidocs/public.api.notes.json) with a HTML version here: [http://dev.cloudwatt.com/fr/doc/api/api-ref-bss.html](http://dev.cloudwatt.com/fr/doc/api/api-ref-bss.html).
+
+The documentation explains how to use the various API calls and the Capabilities on a given account required to perform a specific call if applicable.
+
+SDK
+---
+
+A Java SDK is available for convenience with binaries and source code at [https://github.com/cloudwatt/bssapi-sdk](https://github.com/cloudwatt/bssapi-sdk]). It hides all Capabilities boilerplate to expose only the features you may access using the roles of Identity using Optional<API> objects. Thus, very easy to use. Several examples are provided on how extracting various data and performing some actions. Feel free to contribute or ask for new features.
+
+Other APIs (keystone-admin-api v2)
+----------------------------------
+
+If you are already using Keystone admin API v2, BSS Api also provide a partial compatibility layer implementing the keystone-admin-API semantics. The BSS API provide more features, but if you already implemented Keystone-admin-api, it may be convenient to use. Feel free to contact us if you need a broader range of keystone-admin-api compatibility endpoints.
+
+keystone-admin-api is available at this endpoint: [https://identity-admin.fr1.cloudwatt.com/v2.0/](https://identity-admin.fr1.cloudwatt.com/v2.0/).
+
+Note that you need a scoped tenant. Internally, this endpoint uses BSS API, so all capabilities defining which features you may call are defined by the corresponding calls in BSS API.
+
+
+Usage Limitations
+-----------------
+
+The number of calls you may perform per identity and IP is rate-limited. If you experience some issues, please try to limit the number of calls you perform. If you have specific needs, it is still possible to put a higher limit, contact Cloudwatt support for more information.
