@@ -11,8 +11,9 @@ Binaries
 
 Changelog
 ---------
-v0.2.3: fixed various bug fixes. Added methods to fetch consumption in real time.
-v0.2.1: first public release. Only read only methods for now.
+
+- v0.2.3: fixed various bug fixes. Added methods to fetch consumption in real time.
+- v0.2.1: first public release. Only read only methods for now.
 
 Business Support System API
 ===========================
