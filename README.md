@@ -64,7 +64,7 @@ export OS_PASSWORD=mypassword
 export OS_TOKEN=$(curl -H Accept:application/json -H Content-Type:application/json https://identity2.fr1.cloudwatt.com/v2.0/tokens -d '{"auth":{"passwordCredentials": { "username": "myemail@example.com", "password": "MY_PASSWORD"}}}' | jq .access.token.id)
 
  # List all accounts
-2. ```ALL_ACCOUNTS=$(curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN https://bssapi.fr1.cloudwatt.com/bss/1/contact/roles | jq .accounts)
+ALL_ACCOUNTS=$(curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN https://bssapi.fr1.cloudwatt.com/bss/1/contact/roles | jq .accounts)
 
  # For each account wih CAP BILLING_INVOICES, show invoices
 accNum=0; for account in $(echo $ALL_ACCOUNTS|jq -r .[].account); do echo "-----" $account; curAccount=$(echo $ALL_ACCOUNTS|jq .[$accNum]); echo $curAccount | grep "BILLING_INVOICES" > /dev/null && curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN "https://bssapi.fr1.cloudwatt.combss/1/accounts/${account}/listInvoices"|jq . || echo "- Invoices not available"  ; accNum=$(($accNum+1));done
