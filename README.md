@@ -56,7 +56,7 @@ Example Get a listing of the invoices of all the accounts I have:
 
 Note: this example requires [curl](http://curl.haxx.se/download.html) and [jq](http://stedolan.github.io/jq/download/) (in order to extract the correct fields from JSON data)
 
-```
+```sh
 export OS_USERNAME=myemail@example.com
 export OS_PASSWORD=mypassword
 
@@ -74,7 +74,7 @@ As shown, when using HTTP only API, you have to check the Capabilities by yourse
 
 ### Java Example with Java SDK
 
-```
+```java
 String email="myemail@example.com";
 String password="mypassword";
 
