@@ -72,7 +72,7 @@ accNum=0; for account in $(echo $ALL_ACCOUNTS|jq -r .[].account); do echo "-----
 
 As shown, when using HTTP only API, you have to check the Capabilities by yourself.
 
-### Java Example with DSK
+### Java Example with Java SDK
 
 ```
 String email="myemail@example.com";
