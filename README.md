@@ -62,13 +62,13 @@ export OS_USERNAME=myemail@example.com
 export OS_PASSWORD=mypassword
 
  # Get a token
-export OS_TOKEN=$(curl -H Accept:application/json -H Content-Type:application/json https://identity2.fr1.cloudwatt.com/v2.0/tokens -d '{"auth":{"passwordCredentials": { "username": "'${OS_USERNAME}'", "password": "'${OS_PASSWORD}'"}}}' | jq -r .access.token.id)
+export OS_TOKEN=$(curl -H Accept:application/json -H Content-Type:application/json https://identity2.fr1.cloudwatt.com/v2.0/tokens -d '{"auth":{"passwordCredentials": { "username": "myemail@example.com", "password": "MY_PASSWORD"}}}' | jq .access.token.id)
 
  # List all accounts
 ALL_ACCOUNTS=$(curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN https://bssapi.fr1.cloudwatt.com/bss/1/contact/roles | jq .accounts)
 
  # For each account wih CAP BILLING_INVOICES, show invoices
-accNum=0; for account in $(echo $ALL_ACCOUNTS|jq -r .[].account); do echo "-----" $account; curAccount=$(echo $ALL_ACCOUNTS|jq .[$accNum]); echo $curAccount | grep "BILLING_INVOICES" > /dev/null && curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN "https://bssapi.fr1.cloudwatt.com/bss/1/accounts/${account}/listInvoices"|jq . || echo "- Invoices not available"  ; accNum=$(($accNum+1));done
+accNum=0; for account in $(echo $ALL_ACCOUNTS|jq -r .[].account); do echo "-----" $account; curAccount=$(echo $ALL_ACCOUNTS|jq .[$accNum]); echo $curAccount | grep "BILLING_INVOICES" > /dev/null && curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN "https://bssapi.fr1.cloudwatt.combss/1/accounts/${account}/listInvoices"|jq . || echo "- Invoices not available"  ; accNum=$(($accNum+1));done
 ```
 
 As shown, when using HTTP only API, you have to check the Capabilities by yourself.
@@ -100,8 +100,10 @@ for (AccountWithRolesWithOperations a : mainApi.getAccounts()){
            }
            System.out.println("]");
         }
+    } else {
+       System.out.println("Invoices not available for "+a.getCustomerId());
     }
- }
+}
       
 ```
 
@@ -111,7 +113,7 @@ Compared to raw HTTP APIs, you don't have to check the CAPS, the SDK handles it 
 CORS Support
 ------------
 
-BSS API implements fully CORS (Cross-origin resource sharing), which means you can easily use those APIs within a simple static Web page. It may be useful for creating dashboard or business specific features.
+BSS API implements fully CORS (Cross-Origin Resource Sharing), which means you can easily use those APIs within a simple static Web page. It may be useful for creating dashboard or business specific features.
 
 Documentation
 -------------
