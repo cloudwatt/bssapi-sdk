@@ -23,7 +23,7 @@ Overview
 
 Business Support System (BSS) API let you manage your account, identity information and automate creation of accounts, identities, and openstack projects. It also exposes Openstack features that are normally open only to Cloud administrators such as granting roles on tenants or creating new users and tenants.
 
-It also helps having a good overview of your consumption and automate things such as billing integration.
+If you need to automatically create tenants, users, add guest users to your tenants, retrieve invoices and consumption, this is probably the API you needs.
 
 Semantics and concepts
 ----------------------
