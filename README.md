@@ -50,8 +50,61 @@ Example Get a listing of the invoices of all the accounts I have:
 
 1. Get a token
 2. List the capabilities you have on all accounts you can use
-3. for each account where I have the capability BILLING_INVOICES
-4. Get the listing of invoices for this account
+3. for each account where I have the capability BILLING_INVOICES, get the listing of invoices for this account
+
+### Example with CURL
+
+Note: this example requires [curl](http://curl.haxx.se/download.html) and [jq](http://stedolan.github.io/jq/download/) (in order to extract the correct fields from JSON data)
+
+```
+export OS_USERNAME=myemail@example.com
+export OS_PASSWORD=mypassword
+
+ # Get a token
+export OS_TOKEN=$(curl -H Accept:application/json -H Content-Type:application/json https://identity2.fr1.cloudwatt.com/v2.0/tokens -d '{"auth":{"passwordCredentials": { "username": "myemail@example.com", "password": "MY_PASSWORD"}}}' | jq .access.token.id)
+
+ # List all accounts
+2. ```ALL_ACCOUNTS=$(curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN https://bssapi.fr1.cloudwatt.com/bss/1/contact/roles | jq .accounts)
+
+ # For each account wih CAP BILLING_INVOICES, show invoices
+accNum=0; for account in $(echo $ALL_ACCOUNTS|jq -r .[].account); do echo "-----" $account; curAccount=$(echo $ALL_ACCOUNTS|jq .[$accNum]); echo $curAccount | grep "BILLING_INVOICES" > /dev/null && curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN "https://bssapi.fr1.cloudwatt.combss/1/accounts/${account}/listInvoices"|jq . || echo "- Invoices not available"  ; accNum=$(($accNum+1));done
+```
+
+As shown, when using HTTP only API, you have to check the Capabilities by yourself.
+
+### Java Example with DSK
+
+```
+String email="myemail@example.com";
+String password="mypassword";
+
+ // 1. Get API
+final BSSApiHandle mainApi = new BSSAccountFactory.Builder(email, password).build().getHandle();
+
+ // 2. List all accounts
+for (AccountWithRolesWithOperations a : mainApi.getAccounts()){
+    final AccountApi api = a.getApi();
+    
+ // 3. Check if we can list the API (it automatically checks the cap)
+	Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
+    if (myApi.isPresent()) {
+        System.out.println("+ Listing of Invoices");
+        for (Invoice invoice : myApi.get().get().setExtensions(InvoiceExtension.pdf).get()) {
+           System.out.print("\t" + invoice.getId() 
+                                 + " (" + invoice.getTotalInEuros()+ "EUR) created the "
+                                 + invoice.getCreateDate() + ", URLs: [");
+           for (Map.Entry<String, URI> en : invoice.getInvoicesURI().entrySet()) {
+              System.out.print(" " + en.getKey() + ": " + en.getValue().toASCIIString());
+           }
+           System.out.println("]");
+        }
+    }
+ }
+      
+```
+
+Compared to raw HTTP APIs, you don't have to check the CAPS, the SDK handles it nicely for you using Optional APIs.
+
 
 CORS Support
 ------------
