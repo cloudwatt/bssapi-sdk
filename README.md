@@ -69,7 +69,7 @@ export OS_TOKEN=$(curl -H Accept:application/json -H Content-Type:application/js
 ALL_ACCOUNTS=$(curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN https://bssapi.fr1.cloudwatt.com/bss/1/contact/roles | jq .accounts)
 
  # For each account wih CAP BILLING_INVOICES, show invoices
-accNum=0; for account in $(echo $ALL_ACCOUNTS|jq -r .[].account); do echo "-----" $account; curAccount=$(echo $ALL_ACCOUNTS|jq .[$accNum]); echo $curAccount | grep "BILLING_INVOICES" > /dev/null && curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN "https://bssapi.fr1.cloudwatt.com/bss/1/accounts/${account}/listInvoices"|jq . || echo "- Invoices not available"  ; accNum=$(($accNum+1));done
+accNum=0; for account in $(echo $ALL_ACCOUNTS|jq -r .[].account); do echo "-----" $account; curAccount=$(echo $ALL_ACCOUNTS|jq .[$accNum]); echo $curAccount | grep "BILLING_INVOICES" > /dev/null && curl -H Accept:application/json -H X-Auth-Token:$OS_TOKEN "https://bssapi.fr1.cloudwatt.com/bss/1/accounts/${account}/listInvoices?extensions=pdf,csv"|jq . || echo "- Invoices not available"  ; accNum=$(($accNum+1));done
 ```
 
 As shown, when using HTTP only API, you have to check the Capabilities by yourself.
@@ -92,7 +92,7 @@ for (AccountWithRolesWithOperations a : mainApi.getAccounts()){
 	Optional<AccountInvoicesApi> myApi = api.getInvoicesApi();
     if (myApi.isPresent()) {
         System.out.println("Listing of Invoices for account "+a.getCustomerId());
-        for (Invoice invoice : myApi.get().get().setExtensions(InvoiceExtension.pdf).get()) {
+        for (Invoice invoice : myApi.get().get().setExtensions(InvoiceExtension.pdf,InvoiceExtension.csv).get()) {
            System.out.print("\t" + invoice.getId() 
                                  + " (" + invoice.getTotalInEuros()+ "EUR) created the "
                                  + invoice.getCreateDate() + ", URLs: [");
