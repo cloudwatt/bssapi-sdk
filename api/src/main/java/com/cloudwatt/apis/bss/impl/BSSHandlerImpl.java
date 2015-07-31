@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.impl.accountapi.AccountApiImpl;
 import com.cloudwatt.apis.bss.impl.commonapi.CommonApiImpl;
 import com.cloudwatt.apis.bss.impl.contactapi.AccountRoles;
@@ -11,6 +15,9 @@ import com.cloudwatt.apis.bss.impl.contactapi.ContactInformationWithRoles;
 import com.cloudwatt.apis.bss.impl.domain.keystone.TenantsResult;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
+import com.cloudwatt.apis.bss.spec.commonapi.FindUserApi;
+import com.cloudwatt.apis.bss.spec.commonapi.FindUserApi.FindUserQuery;
+import com.cloudwatt.apis.bss.spec.commonapi.FindUserApi.FindUserQueryBuilder;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRoles;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
@@ -18,6 +25,7 @@ import com.cloudwatt.apis.bss.spec.domain.Identity;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountMinimalInformation;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -133,5 +141,67 @@ public class BSSHandlerImpl implements BSSApiHandle {
         } else {
             return res.get().getTenants();
         }
+    }
+
+    private final static class FindUserQueryBuilderImpl implements FindUserQueryBuilder {
+
+        private Optional<String> firstName = Optional.absent();
+
+        private Optional<String> lastName = Optional.absent();
+
+        private final String email;
+
+        @Override
+        public FindUserQuery build() {
+            return new CWIdentityQuery(email, firstName, lastName);
+        }
+
+        @Override
+        public FindUserQueryBuilder setLastName(String lastName) {
+            this.lastName = Optional.fromNullable(lastName);
+            return this;
+        }
+
+        @Override
+        public FindUserQueryBuilder setFirstName(String firstName) {
+            this.firstName = Optional.fromNullable(firstName);
+            return this;
+        }
+
+        /**
+         * Private constructor
+         * 
+         * @param email
+         */
+        private FindUserQueryBuilderImpl(String email) {
+            this.email = email;
+        }
+
+    }
+
+    @Override
+    public Optional<FindUserApi> getFindUserApi() {
+        return Optional.<FindUserApi> of(new FindUserApi() {
+
+            @Override
+            public FindUserQueryBuilder builder(String email) {
+                return new FindUserQueryBuilderImpl(email);
+            }
+
+            @Override
+            public Identity findUser(FindUserQuery query) throws IOException, TooManyRequestsException {
+                final HttpPost post = new HttpPost(context.buildPublicApiUrl(String.format("bss/1/contacts"), //$NON-NLS-1$
+                                                                             Collections.<String, String> emptyMap()));
+                ObjectMapper mapper = new ObjectMapper();
+                String data = mapper.writeValueAsString(query);
+                post.setEntity(new StringEntity(data, ContentType.APPLICATION_JSON));
+                return context.getWebClient()
+                              .doRequestAndRetrieveResultAsJSON(CWIdentity.class,
+                                                                post,
+                                                                Optional.<TokenAccess> of(context.getTokenAccess()))
+                              .orNull();
+            }
+
+        });
     }
 }

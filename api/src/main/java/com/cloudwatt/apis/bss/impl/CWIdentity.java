@@ -1,7 +1,14 @@
 package com.cloudwatt.apis.bss.impl;
 
 import com.cloudwatt.apis.bss.spec.domain.Identity;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_EMPTY)
 class CWIdentity implements Identity {
 
     /**
@@ -10,7 +17,9 @@ class CWIdentity implements Identity {
      * @param id
      * @param email
      */
-    CWIdentity(String id, String name, String email) {
+    @JsonCreator
+    public CWIdentity(@JsonProperty("id") String id, @JsonProperty("name") String name,
+            @JsonProperty("email") String email) {
         this.id = id;
         this.name = name;
         this.email = email;

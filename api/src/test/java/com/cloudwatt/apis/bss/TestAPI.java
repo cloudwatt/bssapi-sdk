@@ -15,8 +15,10 @@ import com.cloudwatt.apis.bss.spec.accountapi.ConsumptionApi.ConsumptionApiBuild
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
+import com.cloudwatt.apis.bss.spec.commonapi.FindUserApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
 import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
+import com.cloudwatt.apis.bss.spec.domain.Identity;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
@@ -88,6 +90,14 @@ public class TestAPI {
 
             System.out.println("Connected as " + mainApi.getIdentity().getEmail() + ", name="
                                + mainApi.getIdentity().getName() + ", id=" + mainApi.getIdentity().getId() + "\n");
+
+            Optional<FindUserApi> userApi = mainApi.getFindUserApi();
+            if (userApi.isPresent()) {
+                Identity id = userApi.get().findUser(userApi.get().builder(email).build());
+                System.out.println("Found User identity=" + id.getEmail() + ", id=" + id.getId() + ", iam="
+                                   + id.getName());
+            }
+
             final Map<String, TenantIFace> idTenants = new HashMap<String, TenantIFace>();
             System.out.println("=== Tenants I can access\n Tenant Identifier               \tenabled\tTenant Name\tTenant Description");
             for (TenantIFace t : mainApi.getTenantsList()) {

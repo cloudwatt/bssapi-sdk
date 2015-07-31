@@ -32,6 +32,10 @@ public interface BSSCap {
          */
         ACCOUNT_ROLES_LIST,
         /**
+         * Edit all the Users and their roles having access to the account
+         */
+        ACCOUNT_ROLES_EDIT,
+        /**
          * List the tenants owned by account
          */
         TENANTS_LIST;

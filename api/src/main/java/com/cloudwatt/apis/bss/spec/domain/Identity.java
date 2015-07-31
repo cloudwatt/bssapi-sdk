@@ -6,14 +6,7 @@ package com.cloudwatt.apis.bss.spec.domain;
  * @author pierre souchay
  *
  */
-public interface Identity {
-
-    /**
-     * Email of identity
-     * 
-     * @return a not null email
-     */
-    public String getEmail();
+public interface Identity extends IdEmail {
 
     /**
      * Identifier of identity
