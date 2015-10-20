@@ -42,20 +42,17 @@ public interface RolesEditApi {
      * Removes the given Role
      * 
      * @param roleToRemove the role to remove
-     * @return null if role was not present, the role removed otherwise
      */
-    public void removeRole(IdentityToAccountRole roleToRemove) throws IOException,
-            TooManyRequestsException;
+    public void removeRole(IdentityToAccountRole roleToRemove) throws IOException, TooManyRequestsException;
 
     /**
      * Add a role to an identity
      * 
      * @param identity the identity to add
      * @param roleToAdd the role to add
-     * @return the relationship added
      */
-    public void addRoleToIdentity(Identity identity, String roleToAdd) throws IOException,
-            TooManyRequestsException, NoSuchRoleException;
+    public void addRoleToIdentity(Identity identity, String roleToAdd) throws IOException, TooManyRequestsException,
+            NoSuchRoleException;
 
     /**
      * List the roles you can add to this account
