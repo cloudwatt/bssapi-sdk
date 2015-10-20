@@ -75,7 +75,25 @@ class SerialDetails {
             this.user_id = user_id;
             this.user_email = user_email;
         }
+    }
 
+    public static class CollectionOfStrings {
+
+        private final Iterable<String> data;
+
+        @JsonCreator
+        public CollectionOfStrings(Iterable<String> innerData) {
+            this.data = innerData;
+        }
+
+        /**
+         * Get the collection of String
+         * 
+         * @return the Strings
+         */
+        public Iterable<String> getData() {
+            return data;
+        }
     }
 
     public static class CollectionOfRolesList {

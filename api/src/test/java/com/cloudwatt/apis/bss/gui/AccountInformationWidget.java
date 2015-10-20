@@ -3,24 +3,43 @@ package com.cloudwatt.apis.bss.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import javax.swing.AbstractAction;
+import javax.swing.AbstractListModel;
+import javax.swing.Action;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
@@ -31,6 +50,8 @@ import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
+import com.cloudwatt.apis.bss.spec.domain.BSSApiHandle;
+import com.cloudwatt.apis.bss.spec.domain.Identity;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
@@ -64,14 +85,46 @@ public class AccountInformationWidget extends JPanel {
         return "<html><div><i>Not Available, you probably don't have the rights to see this information</i></html>";
     }
 
+    private static class ListOfIdentityToAccountRole extends AbstractListModel<IdentityToAccountRole> {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 5706717422482497352L;
+
+        private final List<IdentityToAccountRole> list = new ArrayList<IdentityToAccountRole>();
+
+        @Override
+        public int getSize() {
+            return list.size();
+        }
+
+        @Override
+        public IdentityToAccountRole getElementAt(int index) {
+            return list.get(index);
+        }
+
+        public void setList(Collection<IdentityToAccountRole> elements) {
+            list.clear();
+            list.addAll(0, elements);
+        }
+
+    }
+
     private static String loading() {
         return "<html><div><i>Loading from API...</i></html>";
     }
 
-    public AccountInformationWidget(ExecutorService executor, AccountWithRolesWithOperations account) {
+    private final BSSApiHandle mainApi;
+
+    private final ListOfIdentityToAccountRole rolesOnAccount = new ListOfIdentityToAccountRole();
+
+    public AccountInformationWidget(ExecutorService executor, AccountWithRolesWithOperations account,
+            BSSApiHandle mainApi) {
         super(new GridBagLayout());
         this.executor = executor;
         this.account = account;
+        this.mainApi = mainApi;
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
@@ -103,9 +156,179 @@ public class AccountInformationWidget extends JPanel {
         add(invoicesWidget, c);
     }
 
+    private final JPanel rolesWidget = new JPanel(new BorderLayout());
+
+    private final JEditorPane rolesNotAvailable = new JEditorPane(TEXT_HTML, notAvailable());
+
+    private final JScrollPane rolesWidgetPanel = new JScrollPane(rolesNotAvailable);
+
     private final JEditorPane detailsWidget = new JEditorPane(TEXT_HTML, notAvailable());
 
-    private final JEditorPane rolesWidget = new JEditorPane(TEXT_HTML, notAvailable());
+    private final DefaultComboBoxModel<String> rolesToAddModel = new DefaultComboBoxModel<String>();
+
+    private final Action deleteRoleAction = new AbstractAction() {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 4072793782162076658L;
+
+        {
+            putValue(Action.NAME, "Remove Role");
+            setEnabled(false);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final IdentityToAccountRole r = listOfRoles.getSelectedValue();
+            if (r != null) {
+                setEnabled(false);
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            account.getApi().getRolesListApi().get().getEditRolesApi().get().removeRole(r);
+                            refresh();
+                        } catch (Throwable err) {
+                            JOptionPane.showMessageDialog(null,
+                                                          "Failed to remove Role " + r.getUserEmail() + " ("
+                                                                  + r.getUsageType() + ")  due to error "
+                                                                  + err.getClass() + ": " + err.getMessage());
+                            refresh();
+                        } finally {
+                            setEnabled(listOfRoles.getSelectedValue() != null);
+                        }
+                    }
+                });
+
+            }
+        }
+    };
+
+    private final JList<IdentityToAccountRole> listOfRoles = new JList<IdentityToAccountRole>(rolesOnAccount);
+    {
+        listOfRoles.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listOfRoles.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (listOfRoles.getSelectedValue() == null) {
+                    deleteRoleAction.setEnabled(false);
+                } else {
+                    deleteRoleAction.setEnabled(account.getCaps().contains("ACCOUNT_ROLES_EDIT"));
+                }
+            }
+        });
+        listOfRoles.setCellRenderer(new DefaultListCellRenderer() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = -8862135515110195678L;
+
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+                    boolean cellHasFocus) {
+                if (value instanceof IdentityToAccountRole) {
+                    IdentityToAccountRole val = (IdentityToAccountRole) value;
+                    value = val.getUserEmail() + " (" + val.getUsageType() + ")";
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+
+        });
+        rolesWidget.add(rolesWidgetPanel, BorderLayout.CENTER);
+        JPanel south = new JPanel(new BorderLayout());
+        south.add(new JButton(deleteRoleAction), BorderLayout.WEST);
+        JPanel addPanel = new JPanel(new FlowLayout());
+        addPanel.add(new JLabel("Add user: "));
+        final JComboBox<String> roleToAddCombo = new JComboBox<String>(rolesToAddModel);
+        final JTextField emailToAdd = new JTextField(32);
+        final Action addAction = new AbstractAction() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 3512755900934735798L;
+
+            {
+                setEnabled(false);
+                putValue(Action.NAME, "addRole");
+            }
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setEnabled(false);
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            Identity identity = mainApi.getFindUserApi()
+                                                       .get()
+                                                       .findUser(mainApi.getFindUserApi()
+                                                                        .get()
+                                                                        .builder(emailToAdd.getText())
+                                                                        .build());
+                            account.getApi()
+                                   .getRolesListApi()
+                                   .get()
+                                   .getEditRolesApi()
+                                   .get()
+                                   .addRoleToIdentity(identity, String.valueOf(roleToAddCombo.getSelectedItem()));
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    refresh();
+                                }
+                            });
+
+                        } catch (Throwable err) {
+                            JOptionPane.showMessageDialog(null,
+                                                          "Failed to add Role " + roleToAddCombo.getSelectedItem()
+                                                                  + " to user " + emailToAdd.getText()
+                                                                  + " due to error " + err.getClass() + ": "
+                                                                  + err.getMessage());
+                            refresh();
+                        } finally {
+                            setEnabled(listOfRoles.getSelectedValue() != null);
+                        }
+                    }
+                });
+            }
+        };
+
+        emailToAdd.setToolTipText("email");
+        addPanel.add(emailToAdd);
+        addPanel.add(roleToAddCombo);
+        south.add(addPanel, BorderLayout.CENTER);
+        emailToAdd.getDocument().addDocumentListener(new DocumentListener() {
+
+            private void check() {
+                addAction.setEnabled(roleToAddCombo.getSelectedItem() != null && emailToAdd.getText() != null
+                                     && emailToAdd.getText().length() > 4 && emailToAdd.getText().contains("@"));
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                check();
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                check();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                check();
+            }
+        });
+        south.add(new JButton(addAction), BorderLayout.EAST);
+        rolesWidget.add(south, BorderLayout.SOUTH);
+    }
 
     private final JEditorPane ownedTenantsWidgetText = new JEditorPane(TEXT_HTML, notAvailable());
 
@@ -139,8 +362,7 @@ public class AccountInformationWidget extends JPanel {
                         }
                     }
                 };
-                for (JEditorPane ed : new JEditorPane[] { detailsWidget, rolesWidget, ownedTenantsWidgetText,
-                                                         invoicesWidget }) {
+                for (JEditorPane ed : new JEditorPane[] { detailsWidget, ownedTenantsWidgetText, invoicesWidget }) {
                     ed.setText(loading());
                     ed.setEditable(false);
                     ed.addHyperlinkListener(listener);
@@ -214,32 +436,42 @@ public class AccountInformationWidget extends JPanel {
                 try {
                     Optional<AccountRolesListApi> rolesApi = api.getRolesListApi();
                     if (rolesApi.isPresent()) {
-                        final StringBuilder sb = new StringBuilder("<html><ol>");
+                        final LinkedList<IdentityToAccountRole> roles = new LinkedList<IdentityToAccountRole>();
                         for (IdentityToAccountRole id : rolesApi.get().get()) {
-                            sb.append("<li>")
-                              .append(id.getUserName())
-                              .append("&lt;<a href=\"mailto:")
-                              .append(id.getUserEmail())
-                              .append("\">")
-                              .append(id.getUserEmail())
-                              .append("</a>&gt; has roles <i>")
-                              .append(id.getUsageType())
-                              .append("</i></li>");
+                            roles.add(id);
                         }
-                        sb.append("</ol></html>");
                         SwingUtilities.invokeLater(new Runnable() {
 
                             @Override
                             public void run() {
-                                rolesWidget.setText(sb.toString());
+                                rolesOnAccount.setList(roles);
+                                rolesWidgetPanel.setViewportView(listOfRoles);
                             }
                         });
+                        if (rolesApi.get().getEditRolesApi().isPresent()) {
+                            if (rolesToAddModel.getSize() < 1) {
+                                final Iterable<String> allowedRoles = rolesApi.get()
+                                                                              .getEditRolesApi()
+                                                                              .get()
+                                                                              .listAllowedRolesForAccount();
+                                SwingUtilities.invokeLater(new Runnable() {
+
+                                    @Override
+                                    public void run() {
+                                        for (String a : allowedRoles) {
+                                            rolesToAddModel.addElement(a);
+                                        }
+                                    }
+                                });
+                            }
+                        }
                     } else {
                         SwingUtilities.invokeLater(new Runnable() {
 
                             @Override
                             public void run() {
-                                rolesWidget.setText(notAvailable());
+                                rolesNotAvailable.setText(notAvailable());
+                                rolesWidgetPanel.setViewportView(rolesNotAvailable);
                             }
                         });
                     }
@@ -248,7 +480,9 @@ public class AccountInformationWidget extends JPanel {
 
                         @Override
                         public void run() {
-                            rolesWidget.setText(errorMessageToHTML("Failed to get account roles", err.getMessage()));
+                            rolesNotAvailable.setText(errorMessageToHTML("Failed to get account roles",
+                                                                         err.getMessage()));
+                            rolesWidgetPanel.setViewportView(rolesNotAvailable);
                         }
                     });
                 }

@@ -14,6 +14,7 @@ import com.cloudwatt.apis.bss.spec.accountapi.ConsumptionApi;
 import com.cloudwatt.apis.bss.spec.accountapi.ConsumptionApi.ConsumptionApiBuilder;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
+import com.cloudwatt.apis.bss.spec.accountapi.RolesEditApi;
 import com.cloudwatt.apis.bss.spec.commonapi.CommonApi;
 import com.cloudwatt.apis.bss.spec.commonapi.FindUserApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRolesWithOperations;
@@ -140,6 +141,12 @@ public class TestAPI {
                             for (IdentityToAccountRole id : rolesApi.get().get()) {
                                 System.out.println("\t" + id.getUserName() + " (" + id.getUserEmail() + ") has roles "
                                                    + id.getUsageType());
+                            }
+                            Optional<RolesEditApi> optionalEditApi = rolesApi.get().getEditRolesApi();
+                            if (optionalEditApi.isPresent()) {
+                                RolesEditApi editApi = optionalEditApi.get();
+                                Iterable<String> allowedRoles = editApi.listAllowedRolesForAccount();
+                                System.out.println(" *** You can add the BSS Roles: " + allowedRoles);
                             }
                         } else {
                             System.out.println("- Account roles not available");

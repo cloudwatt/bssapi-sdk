@@ -5,11 +5,16 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.TimeZone;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import com.cloudwatt.apis.bss.impl.ApiContext;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
 import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.CollectionOfOwnedTenants;
 import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.CollectionOfRolesList;
+import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.CollectionOfStrings;
 import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.ListOfInvoicesImpl;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountApi;
 import com.cloudwatt.apis.bss.spec.accountapi.AccountDetailApi;
@@ -18,8 +23,10 @@ import com.cloudwatt.apis.bss.spec.accountapi.AccountRolesListApi;
 import com.cloudwatt.apis.bss.spec.accountapi.ConsumptionApi;
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.accountapi.OwnedTenantsListApi;
+import com.cloudwatt.apis.bss.spec.accountapi.RolesEditApi;
 import com.cloudwatt.apis.bss.spec.domain.AccountWithRoles;
 import com.cloudwatt.apis.bss.spec.domain.BSSCap.KNOWN_CAPS;
+import com.cloudwatt.apis.bss.spec.domain.Identity;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
@@ -27,6 +34,8 @@ import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEventBase;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.cloudwatt.apis.bss.spec.utils.CommonFormats;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -79,6 +88,60 @@ public class AccountApiImpl implements AccountApi {
                                                                 Optional.<TokenAccess> of(context.getTokenAccess()))
                               .get()
                               .getRoles();
+            }
+
+            @Override
+            public Optional<RolesEditApi> getEditRolesApi() {
+                return buildApi(KNOWN_CAPS.ACCOUNT_ROLES_LIST, new RolesEditApi() {
+
+                    @Override
+                    public void removeRole(IdentityToAccountRole roleToRemove) throws IOException,
+                            TooManyRequestsException {
+                        if (roleToRemove == null) {
+                            throw new IllegalArgumentException("RolesEditApi.removeRole(): roleToRemove cannot be null"); //$NON-NLS-1$
+                        }
+                        HttpDelete delete = new HttpDelete(context.buildPublicApiUrl(String.format("bss/1/accounts/%s/roles/%s/%s", account.getCustomerId(), roleToRemove.getUserName(), roleToRemove.getUsageType()), //$NON-NLS-1$
+                                                                                     Collections.<String, String> emptyMap()));
+                        Optional<JsonNode> ret = context.getWebClient()
+                                                        .doRequestAndRetrieveResultAsJSON(JsonNode.class,
+                                                                                          delete,
+                                                                                          Optional.<TokenAccess> of(context.getTokenAccess()));
+                        assert (ret != null);
+                    }
+
+                    @Override
+                    public void addRoleToIdentity(Identity identity, String roleToAdd) throws IOException,
+                            TooManyRequestsException, NoSuchRoleException {
+                        if (identity == null) {
+                            throw new IllegalArgumentException("RolesEditApi.addRoleToIdentity(): identity MUST NOT BE NULL"); //$NON-NLS-1$
+                        }
+                        if (roleToAdd == null || roleToAdd.isEmpty()) {
+                            throw new IllegalArgumentException("RolesEditApi.addRoleToIdentity(): roleToAdd MUST NOT BE NULL OR Empty"); //$NON-NLS-1$
+                        }
+                        // https://bssapi.fr1.cloudwatt.com/bss/accounts/1/0750102462/addRoleToIdentity
+                        HttpPost post = new HttpPost(context.buildPublicApiUrl(String.format("bss/accounts/1/%s/addRoleToIdentity", account.getCustomerId()), //$NON-NLS-1$
+                                                                               Collections.<String, String> emptyMap()));
+                        ObjectMapper mapper = new ObjectMapper();
+                        String data = mapper.writeValueAsString(ImmutableMap.<String, String> of("usage_type", roleToAdd, "user_id", identity.getName())); //$NON-NLS-1$//$NON-NLS-2$
+                        post.setEntity(new StringEntity(data, ContentType.APPLICATION_JSON));
+                        Optional<JsonNode> ret = context.getWebClient()
+                                                        .doRequestAndRetrieveResultAsJSON(JsonNode.class,
+                                                                                          post,
+                                                                                          Optional.<TokenAccess> of(context.getTokenAccess()));
+                        assert (ret != null);
+                    }
+
+                    @Override
+                    public Iterable<String> listAllowedRolesForAccount() throws IOException, TooManyRequestsException {
+                        return context.getWebClient()
+                                      .doRequestAndRetrieveResultAsJSON(CollectionOfStrings.class,
+                                                                        new HttpGet(context.buildPublicApiUrl(String.format("bss/1/accounts/%s/allowedroles", account.getCustomerId()), //$NON-NLS-1$
+                                                                                                              Collections.<String, String> emptyMap())),
+                                                                        Optional.<TokenAccess> of(context.getTokenAccess()))
+                                      .get()
+                                      .getData();
+                    }
+                });
             }
         });
     }

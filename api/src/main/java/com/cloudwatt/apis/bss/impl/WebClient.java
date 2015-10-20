@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Logger;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -34,6 +35,8 @@ import com.google.common.base.Optional;
 public class WebClient {
 
     private final CloseableHttpClient client;
+
+    private final Logger LOG = Logger.getLogger("com.cloudwatt.WebClient"); //$NON-NLS-1$
 
     /**
      * Package protected constructor
@@ -148,6 +151,7 @@ public class WebClient {
 
             try {
                 final int httpCode = response.getStatusLine().getStatusCode();
+                LOG.fine("REQUEST [" + request.getMethod() + "] " + request.getURI() + " returned " + httpCode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 if (httpCode == 404) {
                     // HTTP 404: Not found
                     return Optional.<T> absent();
