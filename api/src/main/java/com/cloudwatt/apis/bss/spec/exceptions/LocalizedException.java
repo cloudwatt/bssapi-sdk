@@ -13,7 +13,7 @@ public interface LocalizedException {
     /**
      * Get the message in English
      * 
-     * @return the message in english
+     * @return the message in English
      */
     public String getMessage();
 

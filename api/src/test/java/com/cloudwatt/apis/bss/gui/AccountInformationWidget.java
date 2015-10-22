@@ -104,9 +104,25 @@ public class AccountInformationWidget extends JPanel {
             return list.get(index);
         }
 
-        public void setList(Collection<IdentityToAccountRole> elements) {
-            list.clear();
-            list.addAll(0, elements);
+        public void setList(final Collection<IdentityToAccountRole> elements) {
+            SwingUtilities.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    final int oldSize = list.size();
+                    list.clear();
+                    list.addAll(0, elements);
+                    final int newSize = list.size();
+                    if (oldSize > newSize) {
+                        fireIntervalRemoved(this, newSize, oldSize - 1);
+                    } else if (oldSize < newSize) {
+                        fireIntervalAdded(this, oldSize, newSize - 1);
+                    }
+                    if (newSize > 0)
+                        fireContentsChanged(ListOfIdentityToAccountRole.this, 0, newSize - 1);
+                }
+            });
+
         }
 
     }
@@ -189,15 +205,20 @@ public class AccountInformationWidget extends JPanel {
                     public void run() {
                         try {
                             account.getApi().getRolesListApi().get().getEditRolesApi().get().removeRole(r);
-                            refresh();
                         } catch (Throwable err) {
                             JOptionPane.showMessageDialog(null,
                                                           "Failed to remove Role " + r.getUserEmail() + " ("
                                                                   + r.getUsageType() + ")  due to error "
                                                                   + err.getClass() + ": " + err.getMessage());
-                            refresh();
                         } finally {
-                            setEnabled(listOfRoles.getSelectedValue() != null);
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    refresh();
+                                    setEnabled(listOfRoles.getSelectedValue() != null);
+                                }
+                            });
                         }
                     }
                 });
@@ -277,23 +298,22 @@ public class AccountInformationWidget extends JPanel {
                                    .getEditRolesApi()
                                    .get()
                                    .addRoleToIdentity(identity, String.valueOf(roleToAddCombo.getSelectedItem()));
-                            SwingUtilities.invokeLater(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    refresh();
-                                }
-                            });
-
                         } catch (Throwable err) {
                             JOptionPane.showMessageDialog(null,
                                                           "Failed to add Role " + roleToAddCombo.getSelectedItem()
                                                                   + " to user " + emailToAdd.getText()
                                                                   + " due to error " + err.getClass() + ": "
                                                                   + err.getMessage());
-                            refresh();
                         } finally {
-                            setEnabled(listOfRoles.getSelectedValue() != null);
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    refresh();
+                                    setEnabled(listOfRoles.getSelectedValue() != null);
+                                }
+                            });
+
                         }
                     }
                 });
