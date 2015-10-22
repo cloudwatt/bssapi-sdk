@@ -341,7 +341,7 @@ class SerialDetails {
         public EventType getEventType() {
             try {
                 return EventType.valueOf(getType());
-            } catch (NullPointerException err) {
+            } catch (IllegalArgumentException | NullPointerException err) {
                 return EventType.Unknown;
             }
         }
