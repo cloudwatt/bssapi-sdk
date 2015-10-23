@@ -12,6 +12,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import com.cloudwatt.apis.bss.impl.ApiContext;
 import com.cloudwatt.apis.bss.impl.TokenResult.TokenAccess;
+import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.CollectionOfOpenstackUserWithRolesImpl;
 import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.CollectionOfOwnedTenants;
 import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.CollectionOfRolesList;
 import com.cloudwatt.apis.bss.impl.accountapi.SerialDetails.CollectionOfStrings;
@@ -31,6 +32,8 @@ import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
+import com.cloudwatt.apis.bss.spec.domain.account.openstack.OpenstackUserWithRoles;
+import com.cloudwatt.apis.bss.spec.domain.account.openstack.TenantRolesApi;
 import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEventBase;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
 import com.cloudwatt.apis.bss.spec.utils.CommonFormats;
@@ -178,6 +181,24 @@ public class AccountApiImpl implements AccountApi {
                         @Override
                         public Optional<ConsumptionApi> getConsumptionApi() {
                             return AccountApiImpl.this.getConsumptionApi(t);
+                        }
+
+                        @Override
+                        public Optional<TenantRolesApi> getOpenstackRolesApi() {
+                            return buildApi(KNOWN_CAPS.TENANT_SHOW, new TenantRolesApi() {
+
+                                @Override
+                                public Iterable<OpenstackUserWithRoles> getUsers() throws IOException,
+                                        TooManyRequestsException {
+                                    return context.getWebClient()
+                                                  .doRequestAndRetrieveResultAsJSON(CollectionOfOpenstackUserWithRolesImpl.class,
+                                                                                    new HttpGet(context.buildPublicApiUrl(String.format("bss/1/tenants/%s/users", t.getTenantId()), //$NON-NLS-1$
+                                                                                                                          Collections.<String, String> emptyMap())),
+                                                                                    Optional.<TokenAccess> of(context.getTokenAccess()))
+                                                  .get()
+                                                  .getUsers();
+                                }
+                            });
                         }
                     });
                 }

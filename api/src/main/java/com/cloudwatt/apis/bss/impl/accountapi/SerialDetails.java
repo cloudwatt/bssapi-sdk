@@ -4,7 +4,9 @@ import java.net.URI;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -13,6 +15,8 @@ import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Payment;
+import com.cloudwatt.apis.bss.spec.domain.account.openstack.OpenstackRole;
+import com.cloudwatt.apis.bss.spec.domain.account.openstack.OpenstackUserWithRoles;
 import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEventBase;
 import com.cloudwatt.apis.bss.spec.domain.consumption.block.HourBlockSizeOpenstackAggregatedMetricEvent;
@@ -546,6 +550,106 @@ class SerialDetails {
         public Iterable<? extends HourlyEventBase> getEvents() {
             return events;
         }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class OpenstackRoleImpl implements OpenstackRole {
+
+        private final String id;
+
+        private final String name;
+
+        @JsonCreator
+        public OpenstackRoleImpl(@JsonProperty(value = "id", required = true) String id,
+                @JsonProperty(value = "name", required = false) String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        @Override
+        public String getId() {
+            return id;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String toString() {
+            return name == null ? id : name;
+        }
+
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class OpenstackUserWithRolesImpl implements OpenstackUserWithRoles {
+
+        private final String name;
+
+        private final String email;
+
+        private final String id;
+
+        private final Collection<OpenstackRole> roles;
+
+        @JsonCreator
+        public OpenstackUserWithRolesImpl(@JsonProperty(value = "name") String name,
+                @JsonProperty(value = "email") String email, @JsonProperty(value = "id") String id,
+                @JsonProperty(value = "roles") Collection<OpenstackRoleImpl> roles) {
+            this.name = name;
+            this.email = email;
+            this.id = id;
+
+            final ImmutableList.Builder<OpenstackRole> builder = ImmutableList.<OpenstackRole> builder();
+            for (OpenstackRole r : roles) {
+                builder.add(r);
+            }
+            this.roles = builder.build();
+        }
+
+        @Override
+        public String getUserName() {
+            return name;
+        }
+
+        @Override
+        public String getEmail() {
+            return email;
+        }
+
+        @Override
+        public String getOpenstackId() {
+            return id;
+        }
+
+        @Override
+        public Collection<OpenstackRole> getRoles() {
+            return roles;
+        }
+
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class CollectionOfOpenstackUserWithRolesImpl {
+
+        private final Collection<OpenstackUserWithRoles> users;
+
+        public Collection<OpenstackUserWithRoles> getUsers() {
+            return users;
+        }
+
+        @JsonCreator
+        public CollectionOfOpenstackUserWithRolesImpl(
+                @JsonProperty(value = "users", required = true) List<OpenstackUserWithRolesImpl> users) {
+            final ImmutableList.Builder<OpenstackUserWithRoles> builder = ImmutableList.<OpenstackUserWithRoles> builder();
+            for (OpenstackUserWithRolesImpl r : users) {
+                builder.add(r);
+            }
+            this.users = builder.build();
+        }
+
     }
 
 }

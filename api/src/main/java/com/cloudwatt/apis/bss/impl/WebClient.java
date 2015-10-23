@@ -95,7 +95,7 @@ public class WebClient {
             try {
                 T webClientResponse = parser.readValueAs(clazz);
                 return Optional.fromNullable(webClientResponse);
-            } catch (JsonParseException err) {
+            } catch (JsonMappingException | JsonParseException err) {
                 StringBuilder sb = new StringBuilder("Cannot parse JSON result ["). //$NON-NLS-1$
                 append(request.getMethod())
                                                                                   .append(" ") //$NON-NLS-1$
@@ -151,7 +151,7 @@ public class WebClient {
 
             try {
                 final int httpCode = response.getStatusLine().getStatusCode();
-                LOG.fine("REQUEST [" + request.getMethod() + "] " + request.getURI() + " returned " + httpCode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                LOG.info("REQUEST [" + request.getMethod() + "] " + request.getURI() + " returned " + httpCode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 if (httpCode == 404) {
                     // HTTP 404: Not found
                     return Optional.<T> absent();

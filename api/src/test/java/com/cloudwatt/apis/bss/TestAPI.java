@@ -23,6 +23,9 @@ import com.cloudwatt.apis.bss.spec.domain.Identity;
 import com.cloudwatt.apis.bss.spec.domain.account.AccountDetails;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenantWithApi;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
+import com.cloudwatt.apis.bss.spec.domain.account.openstack.OpenstackRole;
+import com.cloudwatt.apis.bss.spec.domain.account.openstack.OpenstackUserWithRoles;
+import com.cloudwatt.apis.bss.spec.domain.account.openstack.TenantRolesApi;
 import com.cloudwatt.apis.bss.spec.domain.consumption.HourlyEvent;
 import com.cloudwatt.apis.bss.spec.domain.keystone.TenantIFace;
 import com.cloudwatt.apis.bss.spec.exceptions.TooManyRequestsException;
@@ -166,6 +169,19 @@ public class TestAPI {
                                                        + ta.isEnabled());
                                 } else {
                                     System.out.println("\t No access");
+                                }
+                                if (id.getOpenstackRolesApi().isPresent()) {
+                                    TenantRolesApi roles = id.getOpenstackRolesApi().get();
+                                    for (OpenstackUserWithRoles u : roles.getUsers()) {
+                                        System.out.print("\t\t" + u.getEmail());
+                                        System.out.print("\t has roles: [");
+                                        for (OpenstackRole osR : u.getRoles()) {
+                                            System.out.print(" " + osR.getName());
+                                        }
+                                        System.out.println("].");
+                                    }
+                                } else {
+                                    System.out.println("\t\t No Access to users of tenant " + id.getTenantId());
                                 }
                                 if (id.getConsumptionApi().isPresent()) {
                                     System.out.println("\t Consumption for " + id.getTenantId());

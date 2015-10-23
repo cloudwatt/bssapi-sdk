@@ -38,7 +38,11 @@ public interface BSSCap {
         /**
          * List the tenants owned by account
          */
-        TENANTS_LIST;
+        TENANTS_LIST,
+        /**
+         * Show details of an account
+         */
+        TENANT_SHOW;
     };
 
     /**

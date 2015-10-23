@@ -605,6 +605,10 @@ public class AccountInformationWidget extends JPanel {
                                 JTabbedPane jt = new JTabbedPane();
                                 jt.addTab("OwnedTenants", table);
                                 for (OwnedTenantWithApi id : tenants) {
+                                    if (id.getOpenstackRolesApi().isPresent()) {
+                                        jt.add("Users " + id.getTenantId(),
+                                               new TenantRolesPanel(id.getOpenstackRolesApi().get()));
+                                    }
                                     if (id.getConsumptionApi().isPresent()) {
                                         jt.add("Consumption " + id.getTenantId(),
                                                new ConsumptionPanel(id.getConsumptionApi().get()));
