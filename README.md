@@ -12,6 +12,7 @@ Binaries
 Changelog
 ---------
 
+- v0.2.6: fixed LogLevel into WebClient
 - v0.2.5: Support for listing all roles of all users on a owned tenant (2015-10-23)
 - v0.2.4: Added support for adding/removing BSS Roles. Updated Examples.
 - v0.2.3: fixed various bug fixes. Added methods to fetch consumption in real time.
