@@ -151,7 +151,7 @@ public class WebClient {
 
             try {
                 final int httpCode = response.getStatusLine().getStatusCode();
-                LOG.info("REQUEST [" + request.getMethod() + "] " + request.getURI() + " returned " + httpCode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                LOG.fine("REQUEST [" + request.getMethod() + "] " + request.getURI() + " returned " + httpCode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 if (httpCode == 404) {
                     // HTTP 404: Not found
                     return Optional.<T> absent();
