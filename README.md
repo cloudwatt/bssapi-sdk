@@ -12,7 +12,6 @@ Binaries
 Changelog
 ---------
 
-- v0.2.7: Added support of HourPoolOpenstackAggregatedMetricEvent and HourVipOpenstackAggregatedMetricEvent
 - v0.2.6: fixed LogLevel into WebClient
 - v0.2.5: Support for listing all roles of all users on a owned tenant (2015-10-23)
 - v0.2.4: Added support for adding/removing BSS Roles. Updated Examples.
