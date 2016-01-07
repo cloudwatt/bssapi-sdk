@@ -1,5 +1,6 @@
 package com.cloudwatt.apis.bss.spec.domain.consumption.object;
 
+import com.cloudwatt.apis.bss.spec.domain.consumption.RegionalResourceEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.SizeInBytes;
 import com.cloudwatt.apis.bss.spec.domain.consumption.TypedHourlyEvent;
 
@@ -9,7 +10,7 @@ import com.cloudwatt.apis.bss.spec.domain.consumption.TypedHourlyEvent;
  * @author pierre souchay
  *
  */
-public interface HourObjectOutgoingBytesOpenstackAggregatedMetricEvent extends TypedHourlyEvent, SizeInBytes {
+public interface HourObjectOutgoingBytesOpenstackAggregatedMetricEvent extends TypedHourlyEvent, SizeInBytes, RegionalResourceEvent {
 
     /**
      * Get the number of requests

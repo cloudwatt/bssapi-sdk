@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+
 import com.cloudwatt.apis.bss.spec.accountapi.IdentityToAccountRole;
 import com.cloudwatt.apis.bss.spec.domain.account.OwnedTenant;
 import com.cloudwatt.apis.bss.spec.domain.account.billing.Invoice;
@@ -24,6 +25,8 @@ import com.cloudwatt.apis.bss.spec.domain.consumption.block.HourSnapshotSizeOpen
 import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourComputeOutgoingBytesOpenstackAggregatedMetricEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourInstanceOpenstackAggregatedMetricEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.instances.HourMaxFloatingIpsOpenstackAggregatedMetricEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.lbaas.HourPoolOpenstackAggregatedMetricEvent;
+import com.cloudwatt.apis.bss.spec.domain.consumption.lbaas.HourVipOpenstackAggregatedMetricEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.object.HourObjectOutgoingBytesOpenstackAggregatedMetricEvent;
 import com.cloudwatt.apis.bss.spec.domain.consumption.object.HourObjectSizeOpenstackAggregatedMetricEvent;
 import com.cloudwatt.apis.bss.spec.utils.CommonFormats;
@@ -31,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -70,9 +74,9 @@ class SerialDetails {
 
         @JsonCreator
         public IdentityToAccountRoleImpl(@JsonProperty(value = "customer_id", required = true) String customer_id,
-                @JsonProperty(value = "usage_type", required = true) String usage_type,
-                @JsonProperty(value = "user_id", required = true) String user_id,
-                @JsonProperty(value = "user_email", required = false) String user_email) {
+                                         @JsonProperty(value = "usage_type", required = true) String usage_type,
+                                         @JsonProperty(value = "user_id", required = true) String user_id,
+                                         @JsonProperty(value = "user_email", required = false) String user_email) {
             super();
             this.customer_id = customer_id;
             this.usage_type = usage_type;
@@ -92,7 +96,7 @@ class SerialDetails {
 
         /**
          * Get the collection of String
-         * 
+         *
          * @return the Strings
          */
         public Iterable<String> getData() {
@@ -120,7 +124,8 @@ class SerialDetails {
     }
 
     private final static SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", //$NON-NLS-1$
-                                                                                 Locale.ENGLISH);
+        Locale.ENGLISH);
+
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
     }
@@ -170,9 +175,9 @@ class SerialDetails {
 
         @JsonCreator
         public OwnedTenantImpl(@JsonProperty(value = "date_entered", required = true) String date_entered,
-                @JsonProperty(value = "customerId", required = true) String customerId,
-                @JsonProperty(value = "type", required = false) String type,
-                @JsonProperty(value = "tenantId", required = true) String tenantId) {
+                               @JsonProperty(value = "customerId", required = true) String customerId,
+                               @JsonProperty(value = "type", required = false) String type,
+                               @JsonProperty(value = "tenantId", required = true) String tenantId) {
             super();
             this.date_entered = parseIsoDate(date_entered);
             this.customerId = customerId;
@@ -226,8 +231,8 @@ class SerialDetails {
 
         @JsonCreator
         public PaymentImpl(@JsonProperty(value = "id", required = false) int id,
-                @JsonProperty(value = "amount", required = false) double amount,
-                @JsonProperty(value = "create_date", required = false) Date create_date) {
+                           @JsonProperty(value = "amount", required = false) double amount,
+                           @JsonProperty(value = "create_date", required = false) Date create_date) {
             super();
             this.id = id;
             this.amount = amount;
@@ -240,19 +245,19 @@ class SerialDetails {
 
         @JsonCreator
         public InvoiceImpl(@JsonProperty(value = "id", required = true) int id,
-                @JsonProperty(value = "createDate", required = false) Date createDate,
-                @JsonProperty(value = "dueDate", required = false) Date dueDate,
-                @JsonProperty(value = "total", required = true) double total,
-                @JsonProperty(value = "balance", required = false) double balance,
-                @JsonProperty(value = "invoicesURI") Map<String, URI> invoicesURI,
-                @JsonProperty(value = "payments") Iterable<PaymentImpl> payments) {
+                           @JsonProperty(value = "createDate", required = false) Date createDate,
+                           @JsonProperty(value = "dueDate", required = false) Date dueDate,
+                           @JsonProperty(value = "total", required = true) double total,
+                           @JsonProperty(value = "balance", required = false) double balance,
+                           @JsonProperty(value = "invoicesURI") Map<String, URI> invoicesURI,
+                           @JsonProperty(value = "payments") Iterable<PaymentImpl> payments) {
             super();
             this.id = id;
             this.create_date = createDate;
             this.due_date = dueDate;
             this.total = total;
             this.balance = balance;
-            this.invoicesURI = ImmutableMap.<String, URI> copyOf(invoicesURI);
+            this.invoicesURI = ImmutableMap.<String, URI>copyOf(invoicesURI);
             {
                 ImmutableList.Builder<Payment> builder = new ImmutableList.Builder<Payment>();
                 for (PaymentImpl e : payments) {
@@ -335,9 +340,10 @@ class SerialDetails {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class HouryEventImpl implements HourlyEventBase, HourBlockSizeOpenstackAggregatedMetricEvent,
-            HourComputeOutgoingBytesOpenstackAggregatedMetricEvent, HourSnapshotSizeOpenstackAggregatedMetricEvent,
-            HourObjectSizeOpenstackAggregatedMetricEvent, HourInstanceOpenstackAggregatedMetricEvent,
-            HourMaxFloatingIpsOpenstackAggregatedMetricEvent, HourObjectOutgoingBytesOpenstackAggregatedMetricEvent
+        HourComputeOutgoingBytesOpenstackAggregatedMetricEvent, HourSnapshotSizeOpenstackAggregatedMetricEvent,
+        HourObjectSizeOpenstackAggregatedMetricEvent, HourInstanceOpenstackAggregatedMetricEvent,
+        HourMaxFloatingIpsOpenstackAggregatedMetricEvent, HourObjectOutgoingBytesOpenstackAggregatedMetricEvent,
+        HourPoolOpenstackAggregatedMetricEvent, HourVipOpenstackAggregatedMetricEvent
 
     {
 
@@ -357,6 +363,7 @@ class SerialDetails {
             this.projectId = getString("projectId");
             this.computeDate = new Date((Long) fields.remove("computeDate"));
             this.type = String.valueOf(fields.remove("type"));
+            this.region = getString("region");
             fields.remove("version");
             fields.remove("origin");
             fields.remove("tags");
@@ -397,20 +404,25 @@ class SerialDetails {
         }
 
         @Override
+        public String getRegion() {
+            return region;
+        }
+
+        @Override
         public Date getUtcComputeDate() {
             return computeDate;
         }
 
-        private final String type, projectId;
+        private final String type, projectId, region;
 
         private final Date computeDate;
 
         protected StringBuilder createStringBuilderPrefix() {
             StringBuilder sb = new StringBuilder(64);
             sb.append(CommonFormats.buildIso8601Format().format(getUtcComputeDate()))
-              .append(' ')
-              .append(String.valueOf(getEventType()))
-              .append(' ');
+                .append(' ')
+                .append(String.valueOf(getEventType()))
+                .append(' ');
             return sb;
         }
 
@@ -466,6 +478,22 @@ class SerialDetails {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
+        public Iterable<UUID> getMemberIds() {
+            return (Iterable<UUID>) fields.get("members");
+        }
+
+        @Override
+        public int getNumberOfMember() {
+            return (int) getLong("size");
+        }
+
+        @Override
+        public UUID getPoolId() {
+            return UUID.fromString(getString("poolId"));
+        }
+
+        @Override
         public int getCounter() {
             return (int) getLong("counter"); //$NON-NLS-1$
         }
@@ -493,7 +521,6 @@ class SerialDetails {
         @Override
         public long getDurationLifeTimeInMs() {
             return getLong("durationLifetime"); //$NON-NLS-1$
-
         }
 
         @Override
@@ -561,7 +588,7 @@ class SerialDetails {
 
         @JsonCreator
         public OpenstackRoleImpl(@JsonProperty(value = "id", required = true) String id,
-                @JsonProperty(value = "name", required = false) String name) {
+                                 @JsonProperty(value = "name", required = false) String name) {
             this.id = id;
             this.name = name;
         }
@@ -596,13 +623,13 @@ class SerialDetails {
 
         @JsonCreator
         public OpenstackUserWithRolesImpl(@JsonProperty(value = "name") String name,
-                @JsonProperty(value = "email") String email, @JsonProperty(value = "id") String id,
-                @JsonProperty(value = "roles") Collection<OpenstackRoleImpl> roles) {
+                                          @JsonProperty(value = "email") String email, @JsonProperty(value = "id") String id,
+                                          @JsonProperty(value = "roles") Collection<OpenstackRoleImpl> roles) {
             this.name = name;
             this.email = email;
             this.id = id;
 
-            final ImmutableList.Builder<OpenstackRole> builder = ImmutableList.<OpenstackRole> builder();
+            final ImmutableList.Builder<OpenstackRole> builder = ImmutableList.<OpenstackRole>builder();
             for (OpenstackRole r : roles) {
                 builder.add(r);
             }
@@ -642,8 +669,8 @@ class SerialDetails {
 
         @JsonCreator
         public CollectionOfOpenstackUserWithRolesImpl(
-                @JsonProperty(value = "users", required = true) List<OpenstackUserWithRolesImpl> users) {
-            final ImmutableList.Builder<OpenstackUserWithRoles> builder = ImmutableList.<OpenstackUserWithRoles> builder();
+            @JsonProperty(value = "users", required = true) List<OpenstackUserWithRolesImpl> users) {
+            final ImmutableList.Builder<OpenstackUserWithRoles> builder = ImmutableList.<OpenstackUserWithRoles>builder();
             for (OpenstackUserWithRolesImpl r : users) {
                 builder.add(r);
             }
